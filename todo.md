@@ -106,3 +106,8 @@
 
 ## Correção de Navegação
 - [x] Corrigir botões "Acessar como Passageiro" e "Acessar como Motorista" que não estão navegando
+
+## Investigação Navegação
+- [x] Investigar por que botões ainda não estão navegando
+- [x] Verificar se há redirecionamento conflitante
+- [x] Aplicar correção definitiva

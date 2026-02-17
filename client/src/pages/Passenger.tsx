@@ -56,7 +56,7 @@ export default function Passenger() {
   });
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "passenger")) {
+    if (!loading && !user) {
       setLocation("/");
     }
   }, [user, loading, setLocation]);

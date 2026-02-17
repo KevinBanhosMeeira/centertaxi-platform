@@ -52,7 +52,7 @@ export default function Driver() {
   });
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "driver")) {
+    if (!loading && !user) {
       setLocation("/");
     }
   }, [user, loading, setLocation]);
@@ -61,7 +61,7 @@ export default function Driver() {
   const updateLocation = trpc.location.update.useMutation();
 
   useEffect(() => {
-    if (!user || user.role !== "driver") return;
+    if (!user) return;
 
     const updateDriverLocation = () => {
       if (navigator.geolocation) {
