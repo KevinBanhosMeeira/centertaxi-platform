@@ -83,3 +83,7 @@
 - [x] Separar completamente acesso ao painel admin do app passageiro/motorista
 - [x] Remover redirecionamento automático para /admin
 - [x] Admin acessa /admin manualmente, usuários normais usam o app
+
+## Correções de Erros Maps
+- [x] Corrigir erro "Map container not found" na home
+- [x] Corrigir erro "Google Maps API included multiple times"
