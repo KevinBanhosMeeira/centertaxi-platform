@@ -90,3 +90,7 @@
 
 ## Correção Map Container
 - [x] Adicionar verificação robusta de existência do container antes de inicializar Map
+
+## Correções de Queries e Map
+- [x] Corrigir queries retornando undefined (devem retornar null)
+- [x] Prevenir Map de tentar carregar na home

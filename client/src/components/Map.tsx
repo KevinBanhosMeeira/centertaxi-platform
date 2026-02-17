@@ -160,7 +160,7 @@ export function MapView({
     }
     
     if (!mapContainer.current) {
-      console.error("Map container not found after retries");
+      // Silently skip if container not found (page doesn't need map)
       return;
     }
     
