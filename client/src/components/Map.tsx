@@ -145,27 +145,50 @@ export function MapView({
   const map = useRef<google.maps.Map | null>(null);
 
   const init = usePersistFn(async () => {
-    await loadMapScript();
-    if (!mapContainer.current) {
-      console.error("Map container not found");
+    // Skip if map already initialized
+    if (map.current) {
       return;
     }
-    map.current = new window.google.maps.Map(mapContainer.current, {
-      zoom: initialZoom,
-      center: initialCenter,
-      mapTypeControl: true,
-      fullscreenControl: true,
-      zoomControl: true,
-      streetViewControl: true,
-      mapId: "DEMO_MAP_ID",
-    });
-    if (onMapReady) {
-      onMapReady(map.current);
+    
+    await loadMapScript();
+    
+    // Wait for container to be in DOM (with retry)
+    let retries = 0;
+    while (!mapContainer.current && retries < 10) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      retries++;
+    }
+    
+    if (!mapContainer.current) {
+      console.error("Map container not found after retries");
+      return;
+    }
+    
+    try {
+      map.current = new window.google.maps.Map(mapContainer.current, {
+        zoom: initialZoom,
+        center: initialCenter,
+        mapTypeControl: true,
+        fullscreenControl: true,
+        zoomControl: true,
+        streetViewControl: true,
+        mapId: "DEMO_MAP_ID",
+      });
+      if (onMapReady) {
+        onMapReady(map.current);
+      }
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
     }
   });
 
   useEffect(() => {
     init();
+    
+    // Cleanup on unmount
+    return () => {
+      map.current = null;
+    };
   }, [init]);
 
   return (

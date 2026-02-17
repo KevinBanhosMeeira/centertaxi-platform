@@ -87,3 +87,6 @@
 ## Correções de Erros Maps
 - [x] Corrigir erro "Map container not found" na home
 - [x] Corrigir erro "Google Maps API included multiple times"
+
+## Correção Map Container
+- [x] Adicionar verificação robusta de existência do container antes de inicializar Map
