@@ -98,3 +98,8 @@
 ## Implementação do Logo
 - [x] Copiar logo CenterTáxi para o projeto
 - [x] Substituir ícones genéricos pelo logo em todas as telas
+
+## Redesign Interface Passageiro
+- [x] Refatorar página Passenger para mapa em tela cheia
+- [x] Adicionar campo de busca de destino na parte inferior
+- [x] Seguir layout do white-label (mapa fullscreen + bottom sheet)

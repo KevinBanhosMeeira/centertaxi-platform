@@ -2,8 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, Car, MapPin, Navigation, Clock, DollarSign, X } from "lucide-react";
+import { Loader2, MapPin, Navigation, Clock, DollarSign, X, User, Bell, Calendar } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -15,32 +14,28 @@ const PRICE_PER_KM = 3.5; // R$ 3.50 por km
 export default function Passenger() {
   const { user, loading, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [price, setPrice] = useState<number | null>(null);
-  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
   
   const mapRef = useRef<google.maps.Map | null>(null);
-  const originAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const destinationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   const { data: activeRide, refetch: refetchActiveRide } = trpc.rides.getActive.useQuery(undefined, {
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: 5000,
   });
 
   const requestRide = trpc.rides.request.useMutation({
     onSuccess: () => {
-      toast.success("Corrida solicitada com sucesso!");
+      toast.success("Corrida solicitada!");
       refetchActiveRide();
-      setShowRequestForm(false);
-      setOrigin("");
+      setShowBottomSheet(false);
       setDestination("");
-      setOriginCoords(null);
       setDestinationCoords(null);
       setDistance(null);
       setPrice(null);
@@ -82,6 +77,7 @@ export default function Passenger() {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
+          setOriginCoords(pos);
           map.setCenter(pos);
           map.setZoom(15);
         },
@@ -89,24 +85,6 @@ export default function Passenger() {
           toast.error("Não foi possível obter sua localização");
         }
       );
-    }
-
-    // Setup autocomplete for origin
-    const originInput = document.getElementById("origin-input") as HTMLInputElement;
-    if (originInput) {
-      originAutocompleteRef.current = new google.maps.places.Autocomplete(originInput, {
-        componentRestrictions: { country: "br" },
-      });
-      originAutocompleteRef.current.addListener("place_changed", () => {
-        const place = originAutocompleteRef.current?.getPlace();
-        if (place?.geometry?.location) {
-          setOrigin(place.formatted_address || "");
-          setOriginCoords({
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          });
-        }
-      });
     }
 
     // Setup autocomplete for destination
@@ -144,6 +122,7 @@ export default function Passenger() {
             const distanceInKm = route.legs[0].distance!.value / 1000;
             setDistance(distanceInKm);
             setPrice(distanceInKm * PRICE_PER_KM);
+            setShowBottomSheet(true);
           }
         }
       });
@@ -152,19 +131,25 @@ export default function Passenger() {
 
   const handleRequestRide = () => {
     if (!originCoords || !destinationCoords || !distance || !price) {
-      toast.error("Preencha origem e destino");
+      toast.error("Selecione um destino");
       return;
     }
 
-    requestRide.mutate({
-      originAddress: origin,
-      originLat: originCoords.lat.toString(),
-      originLng: originCoords.lng.toString(),
-      destinationAddress: destination,
-      destinationLat: destinationCoords.lat.toString(),
-      destinationLng: destinationCoords.lng.toString(),
-      distanceKm: distance.toFixed(2),
-      priceEstimate: price.toFixed(2),
+    // Get origin address from geocoder
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ location: originCoords }, (results, status) => {
+      if (status === "OK" && results && results[0]) {
+        requestRide.mutate({
+          originAddress: results[0].formatted_address,
+          originLat: originCoords.lat.toString(),
+          originLng: originCoords.lng.toString(),
+          destinationAddress: destination,
+          destinationLat: destinationCoords.lat.toString(),
+          destinationLng: destinationCoords.lng.toString(),
+          distanceKm: distance.toFixed(2),
+          priceEstimate: price.toFixed(2),
+        });
+      }
     });
   };
 
@@ -181,204 +166,222 @@ export default function Passenger() {
       requested: "Procurando motorista...",
       accepted: "Motorista a caminho",
       in_progress: "Em andamento",
-      completed: "Concluída",
-      cancelled: "Cancelada",
     };
     return statusMap[status] || status;
   };
 
-  const getStatusColor = (status: string) => {
-    const colorMap: Record<string, string> = {
-      requested: "text-yellow-500",
-      accepted: "text-blue-500",
-      in_progress: "text-green-500",
-      completed: "text-gray-500",
-      cancelled: "text-red-500",
-    };
-    return colorMap[status] || "text-gray-500";
-  };
-
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card px-4 py-3 flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="CenterTáxi" className="h-10 w-auto" />
-          <h1 className="text-xl font-bold text-card-foreground">CenterTáxi</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setLocation("/history")}>
-            Histórico
+    <div className="h-screen flex flex-col bg-background relative">
+      {/* Map Fullscreen */}
+      <div className="absolute inset-0">
+        <MapView onMapReady={handleMapReady} />
+      </div>
+
+      {/* Top Bar */}
+      <div className="absolute top-0 left-0 right-0 z-20 p-4">
+        <div className="flex items-center justify-between">
+          {/* Logo Button */}
+          <Button
+            className="bg-[#003DA5] hover:bg-[#002D7F] text-white rounded-full px-6 py-2 h-auto shadow-lg"
+            onClick={() => setLocation("/history")}
+          >
+            <img src="/logo.png" alt="CenterTáxi" className="h-6 w-auto mr-2" />
+            <span className="font-semibold">Center Táxi</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => logout()}>
-            Sair
-          </Button>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <div className="flex-1 relative">
-        {/* Map */}
-        <div className="absolute inset-0">
-          <MapView onMapReady={handleMapReady} />
-        </div>
-
-        {/* Active Ride Card */}
-        {activeRide && (
-          <div className="absolute top-4 left-4 right-4 z-10">
-            <Card className="p-4 bg-card border-border shadow-lg">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
-                    <span className={`font-semibold ${getStatusColor(activeRide.status)}`}>
-                      {getStatusText(activeRide.status)}
-                    </span>
-                  </div>
-                  {(activeRide.status === "requested" || activeRide.status === "accepted") && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => cancelRide.mutate({ rideId: activeRide.id })}
-                      disabled={cancelRide.isPending}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-card-foreground">{activeRide.originAddress}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-card-foreground">{activeRide.destinationAddress}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-border">
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Navigation className="h-4 w-4" />
-                    <span>{activeRide.distanceKm} km</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-lg font-semibold text-primary">
-                    <DollarSign className="h-5 w-5" />
-                    <span>R$ {activeRide.priceEstimate}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Request Ride Button */}
-        {!activeRide && !showRequestForm && (
-          <div className="absolute bottom-8 left-4 right-4 z-10">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
             <Button
-              size="lg"
-              className="w-full shadow-lg"
-              onClick={() => setShowRequestForm(true)}
+              variant="ghost"
+              size="icon"
+              className="bg-white rounded-full shadow-lg"
             >
-              <MapPin className="h-5 w-5 mr-2" />
-              Solicitar corrida
+              <Calendar className="h-5 w-5 text-gray-700" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="bg-white rounded-full shadow-lg"
+            >
+              <Bell className="h-5 w-5 text-gray-700" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="bg-white rounded-full shadow-lg"
+              onClick={() => setLocation("/history")}
+            >
+              <User className="h-5 w-5 text-gray-700" />
             </Button>
           </div>
-        )}
+        </div>
 
-        {/* Request Form */}
-        {!activeRide && showRequestForm && (
-          <div className="absolute bottom-0 left-0 right-0 z-10 bg-card border-t border-border rounded-t-2xl shadow-2xl">
-            <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        {/* Tabs: Agora / Agendar */}
+        <div className="flex items-center gap-2 mt-4 justify-center">
+          <Button className="bg-[#003DA5] hover:bg-[#002D7F] text-white rounded-full px-8 py-2 shadow-lg">
+            Agora
+          </Button>
+          <Button variant="outline" className="bg-white text-gray-700 rounded-full px-8 py-2 shadow-lg">
+            Agendar
+          </Button>
+        </div>
+      </div>
+
+      {/* Active Ride Overlay */}
+      {activeRide && (
+        <div className="absolute top-32 left-4 right-4 z-20">
+          <Card className="p-4 bg-white shadow-2xl">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-card-foreground">Nova corrida</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowRequestForm(false);
-                    setOrigin("");
-                    setDestination("");
-                    setOriginCoords(null);
-                    setDestinationCoords(null);
-                    setDistance(null);
-                    setPrice(null);
-                    if (directionsRendererRef.current) {
-                      directionsRendererRef.current.setDirections({ routes: [] } as any);
-                    }
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="origin-input" className="text-card-foreground">Origem</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                    <Input
-                      id="origin-input"
-                      type="text"
-                      placeholder="De onde você está saindo?"
-                      value={origin}
-                      onChange={(e) => setOrigin(e.target.value)}
-                      className="pl-10 bg-background text-foreground border-border"
-                    />
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-[#003DA5]" />
+                  <span className="font-semibold text-gray-900">
+                    {getStatusText(activeRide.status)}
+                  </span>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="destination-input" className="text-card-foreground">Destino</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-red-500" />
-                    <Input
-                      id="destination-input"
-                      type="text"
-                      placeholder="Para onde você vai?"
-                      value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
-                      className="pl-10 bg-background text-foreground border-border"
-                    />
-                  </div>
+                {(activeRide.status === "requested" || activeRide.status === "accepted") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => cancelRide.mutate({ rideId: activeRide.id })}
+                    disabled={cancelRide.isPending}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">{activeRide.originAddress}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">{activeRide.destinationAddress}</span>
                 </div>
               </div>
 
-              {distance && price && (
-                <Card className="p-4 bg-primary/10 border-primary/20">
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Navigation className="h-4 w-4" />
+                  <span>{activeRide.distanceKm} km</span>
+                </div>
+                <div className="flex items-center gap-1 text-lg font-semibold text-[#E63946]">
+                  <DollarSign className="h-5 w-5" />
+                  <span>R$ {activeRide.priceEstimate}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Bottom Sheet - Search Destination */}
+      {!activeRide && (
+        <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl">
+          <div className="p-6 space-y-4">
+            {/* Greeting */}
+            <div className="text-center mb-2">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Boa {new Date().getHours() < 12 ? "dia" : new Date().getHours() < 18 ? "tarde" : "noite"}, {user?.name?.split(" ")[0]}
+              </h2>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                id="destination-input"
+                type="text"
+                placeholder="Buscar destino"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                className="pl-12 pr-4 py-6 text-base rounded-2xl border-gray-200 bg-gray-50"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full"
+              >
+                <Calendar className="h-5 w-5 text-gray-600" />
+              </Button>
+            </div>
+
+            {/* Bottom Sheet - Price Estimate */}
+            {showBottomSheet && distance && price && (
+              <div className="space-y-4 pt-4 border-t">
+                <h3 className="text-lg font-semibold text-gray-900">Escolha como viajar</h3>
+                
+                {/* Ride Option - CenterTáxi Comum */}
+                <Card className="p-4 border-2 border-[#003DA5] bg-white">
                   <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Distância estimada</div>
-                      <div className="text-lg font-semibold text-foreground">{distance.toFixed(1)} km</div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-4xl">🚕</div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">CenterTáxi Comum</h4>
+                        <p className="text-sm text-gray-600">Liberdade pra se mover !</p>
+                        <p className="text-sm text-green-600 font-medium">✅ Até 1% de cashback</p>
+                      </div>
                     </div>
-                    <div className="space-y-1 text-right">
-                      <div className="text-sm text-muted-foreground">Preço estimado</div>
-                      <div className="text-2xl font-bold text-primary">R$ {price.toFixed(2)}</div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-[#E63946]">R$ {price.toFixed(2)}</p>
+                      <p className="text-xs text-gray-500">{distance.toFixed(1)} km • {Math.ceil(distance / 0.5)} min</p>
                     </div>
                   </div>
                 </Card>
-              )}
 
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={handleRequestRide}
-                disabled={!originCoords || !destinationCoords || requestRide.isPending}
-              >
-                {requestRide.isPending ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    Solicitando...
-                  </>
-                ) : (
-                  "Confirmar corrida"
-                )}
-              </Button>
-            </div>
+                {/* Ride Option - CenterTáxi Bag */}
+                <Card className="p-4 border border-gray-200 bg-white opacity-75">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="text-4xl">🚖</div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">CenterTáxi Bag</h4>
+                        <p className="text-sm text-gray-600">Mais espaço, mais liberdade !</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-[#E63946]">R$ {price.toFixed(2)}</p>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Payment Method */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">💳</div>
+                    <div>
+                      <p className="font-medium text-gray-900">Pix + Saldo</p>
+                      <p className="text-sm text-gray-600">Forma de pagamento</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon">
+                    <Navigation className="h-5 w-5 text-gray-600 rotate-90" />
+                  </Button>
+                </div>
+
+                {/* Confirm Button */}
+                <Button
+                  size="lg"
+                  className="w-full bg-[#003DA5] hover:bg-[#002D7F] text-white py-6 text-lg rounded-2xl shadow-lg"
+                  onClick={handleRequestRide}
+                  disabled={requestRide.isPending}
+                >
+                  {requestRide.isPending ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      Solicitando...
+                    </>
+                  ) : (
+                    "Confirmar CenterTáxi Comum"
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
