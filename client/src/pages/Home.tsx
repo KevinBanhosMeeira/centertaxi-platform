@@ -34,6 +34,75 @@ export default function Home() {
     );
   }
 
+  // For logged users, show navigation to test different interfaces
+  if (user && user.role === "admin") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-12">
+        <div className="max-w-2xl w-full space-y-8">
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                <Car className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">CenterTáxi</h1>
+            </div>
+            <h2 className="text-2xl font-semibold text-foreground">Painel de Testes</h2>
+            <p className="text-muted-foreground">
+              Olá, {user.name}! Escolha qual interface deseja testar:
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            <Card className="p-6 space-y-4 bg-card border-border">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-card-foreground">Interface do Passageiro</h3>
+                  <p className="text-sm text-muted-foreground">Solicitar corridas, ver histórico</p>
+                </div>
+              </div>
+              <Button onClick={() => setLocation("/passenger")} className="w-full" size="lg">
+                Acessar como Passageiro
+              </Button>
+            </Card>
+
+            <Card className="p-6 space-y-4 bg-card border-border">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Car className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-card-foreground">Interface do Motorista</h3>
+                  <p className="text-sm text-muted-foreground">Aceitar corridas, ver ganhos</p>
+                </div>
+              </div>
+              <Button onClick={() => setLocation("/driver")} className="w-full" size="lg">
+                Acessar como Motorista
+              </Button>
+            </Card>
+
+            <Card className="p-6 space-y-4 bg-card border-border">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-card-foreground">Painel Administrativo</h3>
+                  <p className="text-sm text-muted-foreground">Gerência de usuários e corridas</p>
+                </div>
+              </div>
+              <Button onClick={() => setLocation("/admin")} className="w-full" size="lg" variant="outline">
+                Acessar Painel Admin
+              </Button>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-background">

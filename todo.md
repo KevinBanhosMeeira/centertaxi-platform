@@ -74,3 +74,7 @@
 - [x] Criar guia simplificado de acesso (explicação para criança de 8 anos)
 - [x] Configurar integração com GitHub
 - [x] Preparar instruções específicas para instalação no iOS
+
+## Correções de Bugs
+- [x] Corrigir erro "Cannot update a component while rendering" no CompleteProfile
+- [x] Melhorar navegação entre interfaces (passageiro, motorista, admin)
