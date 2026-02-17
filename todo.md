@@ -103,3 +103,6 @@
 - [x] Refatorar página Passenger para mapa em tela cheia
 - [x] Adicionar campo de busca de destino na parte inferior
 - [x] Seguir layout do white-label (mapa fullscreen + bottom sheet)
+
+## Correção de Navegação
+- [x] Corrigir botões "Acessar como Passageiro" e "Acessar como Motorista" que não estão navegando

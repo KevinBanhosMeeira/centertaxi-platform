@@ -13,15 +13,11 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user) {
-      // Redirect based on user role (admin NOT redirected automatically)
+      // Only redirect if profile is not completed
       if (user.profileCompleted === 0) {
         setLocation("/complete-profile");
-      } else if (user.role === "passenger") {
-        setLocation("/passenger");
-      } else if (user.role === "driver") {
-        setLocation("/driver");
       }
-      // Admin stays on home page - must access /admin manually
+      // Users with completed profile stay on home to choose interface
     }
   }, [user, loading, setLocation]);
 
