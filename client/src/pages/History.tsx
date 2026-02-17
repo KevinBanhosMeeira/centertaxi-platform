@@ -58,9 +58,7 @@ export default function History() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-            <Car className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src="/logo.png" alt="CenterTáxi" className="h-10 w-auto" />
           <h1 className="text-xl font-bold text-card-foreground">Histórico de Corridas</h1>
         </div>
       </header>

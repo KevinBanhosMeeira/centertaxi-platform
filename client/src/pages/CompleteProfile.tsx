@@ -67,9 +67,7 @@ export default function CompleteProfile() {
       <div className="max-w-2xl w-full space-y-8">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-              <Car className="h-7 w-7 text-primary-foreground" />
-            </div>
+            <img src="/logo.png" alt="CenterTáxi" className="h-16 w-auto" />
             <h1 className="text-3xl font-bold text-foreground">CenterTáxi</h1>
           </div>
           <h2 className="text-2xl font-semibold text-foreground">Complete seu perfil</h2>

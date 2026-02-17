@@ -109,9 +109,7 @@ export default function Driver() {
       {/* Header */}
       <header className="border-b border-border bg-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-            <Car className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src="/logo.png" alt="CenterTáxi" className="h-10 w-auto" />
           <h1 className="text-xl font-bold text-card-foreground">CenterTáxi Motorista</h1>
         </div>
         <div className="flex items-center gap-2">

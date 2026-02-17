@@ -42,9 +42,7 @@ export default function Home() {
           <div className="max-w-2xl w-full space-y-8">
             <div className="text-center space-y-2">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-                  <Car className="h-7 w-7 text-primary-foreground" />
-                </div>
+                <img src="/logo.png" alt="CenterTáxi" className="h-16 w-auto" />
                 <h1 className="text-3xl font-bold text-foreground">CenterTáxi</h1>
               </div>
               <h2 className="text-2xl font-semibold text-foreground">Painel de Testes</h2>
@@ -71,9 +69,7 @@ export default function Home() {
 
               <Card className="p-6 space-y-4 bg-card border-border">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Car className="h-6 w-6 text-primary" />
-                  </div>
+                  <img src="/logo.png" alt="CenterTáxi" className="h-12 w-auto" />
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-card-foreground">Interface do Motorista</h3>
                     <p className="text-sm text-muted-foreground">Aceitar corridas, ver ganhos</p>
@@ -119,9 +115,7 @@ export default function Home() {
         <header className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-                <Car className="h-6 w-6 text-primary-foreground" />
-              </div>
+              <img src="/logo.png" alt="CenterTáxi" className="h-12 w-auto" />
               <h1 className="text-2xl font-bold text-foreground">CenterTáxi</h1>
             </div>
             <Button asChild>
@@ -158,9 +152,7 @@ export default function Home() {
               </Card>
 
               <Card className="p-8 space-y-4 bg-card border-border hover:border-primary/50 transition-colors">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <Car className="h-8 w-8 text-primary" />
-                </div>
+                <img src="/logo.png" alt="CenterTáxi" className="h-16 w-auto mx-auto" />
                 <h3 className="text-2xl font-semibold text-card-foreground">Motorista</h3>
                 <p className="text-muted-foreground">
                   Aceite corridas, gerencie sua agenda e maximize seus ganhos com nossa plataforma

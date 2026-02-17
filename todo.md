@@ -94,3 +94,7 @@
 ## Correções de Queries e Map
 - [x] Corrigir queries retornando undefined (devem retornar null)
 - [x] Prevenir Map de tentar carregar na home
+
+## Implementação do Logo
+- [x] Copiar logo CenterTáxi para o projeto
+- [x] Substituir ícones genéricos pelo logo em todas as telas
