@@ -227,86 +227,107 @@ export default function Passenger() {
         </div>
       </div>
 
-      {/* Active Ride Overlay */}
-      {activeRide && (
-        <div className="absolute top-32 left-4 right-4 z-20">
-          <Card className="p-4 bg-white shadow-2xl">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-[#003DA5]" />
-                  <span className="font-semibold text-gray-900">
-                    {getStatusText(activeRide.status)}
-                  </span>
+      {/* Bottom Sheet - Always visible */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl">
+        <div className="p-6 space-y-4">
+          {/* Active Ride Status */}
+          {activeRide ? (
+            <Card className="p-4 bg-white border-2 border-[#003DA5]">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-[#003DA5]" />
+                    <span className="font-semibold text-gray-900">
+                      {getStatusText(activeRide.status)}
+                    </span>
+                  </div>
+                  {(activeRide.status === "requested" || activeRide.status === "accepted") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => cancelRide.mutate({ rideId: activeRide.id })}
+                      disabled={cancelRide.isPending}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-                {(activeRide.status === "requested" || activeRide.status === "accepted") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => cancelRide.mutate({ rideId: activeRide.id })}
-                    disabled={cancelRide.isPending}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{activeRide.originAddress}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{activeRide.destinationAddress}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <Navigation className="h-4 w-4" />
+                    <span>{activeRide.distanceKm} km</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-lg font-semibold text-[#E63946]">
+                    <DollarSign className="h-5 w-5" />
+                    <span>R$ {activeRide.priceEstimate}</span>
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">{activeRide.originAddress}</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">{activeRide.destinationAddress}</span>
-                </div>
+            </Card>
+          ) : (
+            <>
+              {/* Greeting */}
+              <div className="text-center mb-2">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Boa {new Date().getHours() < 12 ? "dia" : new Date().getHours() < 18 ? "tarde" : "noite"}, {user?.name?.split(" ")[0]}
+                </h2>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t">
-                <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <Navigation className="h-4 w-4" />
-                  <span>{activeRide.distanceKm} km</span>
+              {/* Search Input */}
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  id="destination-input"
+                  type="text"
+                  placeholder="Buscar destino"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  className="pl-12 pr-4 py-6 text-base rounded-2xl border-gray-200 bg-gray-50"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full"
+                >
+                  <Calendar className="h-5 w-5 text-gray-600" />
+                </Button>
+              </div>
+
+              {/* Favorite Locations */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer">
+                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Rua José Bernardo Pinto, 333</p>
+                    <p className="text-sm text-gray-500">São Paulo - SP</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 text-lg font-semibold text-[#E63946]">
-                  <DollarSign className="h-5 w-5" />
-                  <span>R$ {activeRide.priceEstimate}</span>
+                <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer">
+                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Rodoviaria Tiete</p>
+                    <p className="text-sm text-gray-500">São Paulo - SP</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Bottom Sheet - Search Destination */}
-      {!activeRide && (
-        <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl">
-          <div className="p-6 space-y-4">
-            {/* Greeting */}
-            <div className="text-center mb-2">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Boa {new Date().getHours() < 12 ? "dia" : new Date().getHours() < 18 ? "tarde" : "noite"}, {user?.name?.split(" ")[0]}
-              </h2>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                id="destination-input"
-                type="text"
-                placeholder="Buscar destino"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                className="pl-12 pr-4 py-6 text-base rounded-2xl border-gray-200 bg-gray-50"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full"
-              >
-                <Calendar className="h-5 w-5 text-gray-600" />
-              </Button>
-            </div>
+            </>
+          )}
 
             {/* Bottom Sheet - Price Estimate */}
             {showBottomSheet && distance && price && (
@@ -379,9 +400,8 @@ export default function Passenger() {
                 </Button>
               </div>
             )}
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

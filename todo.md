@@ -111,3 +111,10 @@
 - [x] Investigar por que botões ainda não estão navegando
 - [x] Verificar se há redirecionamento conflitante
 - [x] Aplicar correção definitiva
+
+## Ajuste Layout Passageiro
+- [x] Mover card "Procurando motorista" para bottom sheet
+- [x] Adicionar saudação "Boa noite/dia/tarde, [Nome]"
+- [x] Adicionar campo "Buscar destino" com ícone de lupa
+- [x] Adicionar botão de calendário para agendar
+- [x] Adicionar lista de locais recentes/favoritos
