@@ -118,3 +118,10 @@
 - [x] Adicionar campo "Buscar destino" com ícone de lupa
 - [x] Adicionar botão de calendário para agendar
 - [x] Adicionar lista de locais recentes/favoritos
+
+## Refatoração Tela Passageiro - 2 Estados
+- [x] Criar Tela 1 (SEM corrida): mapa + bottom sheet com busca de destino
+- [x] Mostrar nome correto do usuário logado na saudação
+- [x] Ao selecionar destino: mostrar rota no mapa com Google Directions
+- [x] Criar Tela 2 (COM corrida ativa): mapa com rota + bottom sheet "Procurando motorista"
+- [x] Separar claramente os 2 estados (antes e depois de solicitar corrida)
