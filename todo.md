@@ -68,3 +68,9 @@
 - [ ] Criar documentação de uso
 - [ ] Criar checkpoint final
 - [ ] Preparar instruções de instalação do APK
+
+## Novas Melhorias Solicitadas
+- [ ] Adicionar autenticação via Apple ID (requer Apple Developer Account - $99/ano)
+- [x] Criar guia simplificado de acesso (explicação para criança de 8 anos)
+- [x] Configurar integração com GitHub
+- [x] Preparar instruções específicas para instalação no iOS
