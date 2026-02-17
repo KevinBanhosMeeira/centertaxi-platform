@@ -78,3 +78,8 @@
 ## Correções de Bugs
 - [x] Corrigir erro "Cannot update a component while rendering" no CompleteProfile
 - [x] Melhorar navegação entre interfaces (passageiro, motorista, admin)
+
+## Melhorias de Acesso
+- [x] Separar completamente acesso ao painel admin do app passageiro/motorista
+- [x] Remover redirecionamento automático para /admin
+- [x] Admin acessa /admin manualmente, usuários normais usam o app

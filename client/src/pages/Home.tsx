@@ -13,16 +13,15 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user) {
-      // Redirect based on user role
+      // Redirect based on user role (admin NOT redirected automatically)
       if (user.profileCompleted === 0) {
         setLocation("/complete-profile");
       } else if (user.role === "passenger") {
         setLocation("/passenger");
       } else if (user.role === "driver") {
         setLocation("/driver");
-      } else if (user.role === "admin") {
-        setLocation("/admin");
       }
+      // Admin stays on home page - must access /admin manually
     }
   }, [user, loading, setLocation]);
 
@@ -34,71 +33,81 @@ export default function Home() {
     );
   }
 
-  // For logged users, show navigation to test different interfaces
-  if (user && user.role === "admin") {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-12">
-        <div className="max-w-2xl w-full space-y-8">
-          <div className="text-center space-y-2">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-                <Car className="h-7 w-7 text-primary-foreground" />
+  // For logged users who completed profile, show app interface
+  if (user && user.profileCompleted === 1) {
+    // Admin users see test panel, regular users redirected above
+    if (user.role === "admin") {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-12">
+          <div className="max-w-2xl w-full space-y-8">
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                  <Car className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <h1 className="text-3xl font-bold text-foreground">CenterTáxi</h1>
               </div>
-              <h1 className="text-3xl font-bold text-foreground">CenterTáxi</h1>
+              <h2 className="text-2xl font-semibold text-foreground">Painel de Testes</h2>
+              <p className="text-muted-foreground">
+                Olá, {user.name}! Escolha qual interface deseja testar:
+              </p>
             </div>
-            <h2 className="text-2xl font-semibold text-foreground">Painel de Testes</h2>
-            <p className="text-muted-foreground">
-              Olá, {user.name}! Escolha qual interface deseja testar:
-            </p>
-          </div>
 
-          <div className="grid gap-4">
-            <Card className="p-6 space-y-4 bg-card border-border">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary" />
+            <div className="grid gap-4">
+              <Card className="p-6 space-y-4 bg-card border-border">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-card-foreground">Interface do Passageiro</h3>
+                    <p className="text-sm text-muted-foreground">Solicitar corridas, ver histórico</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-card-foreground">Interface do Passageiro</h3>
-                  <p className="text-sm text-muted-foreground">Solicitar corridas, ver histórico</p>
-                </div>
-              </div>
-              <Button onClick={() => setLocation("/passenger")} className="w-full" size="lg">
-                Acessar como Passageiro
-              </Button>
-            </Card>
+                <Button onClick={() => setLocation("/passenger")} className="w-full" size="lg">
+                  Acessar como Passageiro
+                </Button>
+              </Card>
 
-            <Card className="p-6 space-y-4 bg-card border-border">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Car className="h-6 w-6 text-primary" />
+              <Card className="p-6 space-y-4 bg-card border-border">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Car className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-card-foreground">Interface do Motorista</h3>
+                    <p className="text-sm text-muted-foreground">Aceitar corridas, ver ganhos</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-card-foreground">Interface do Motorista</h3>
-                  <p className="text-sm text-muted-foreground">Aceitar corridas, ver ganhos</p>
-                </div>
-              </div>
-              <Button onClick={() => setLocation("/driver")} className="w-full" size="lg">
-                Acessar como Motorista
-              </Button>
-            </Card>
+                <Button onClick={() => setLocation("/driver")} className="w-full" size="lg">
+                  Acessar como Motorista
+                </Button>
+              </Card>
 
-            <Card className="p-6 space-y-4 bg-card border-border">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-primary" />
+              <Card className="p-6 space-y-4 bg-card border-border">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Shield className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-card-foreground">Painel Administrativo</h3>
+                    <p className="text-sm text-muted-foreground">Gerência de usuários e corridas</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-card-foreground">Painel Administrativo</h3>
-                  <p className="text-sm text-muted-foreground">Gerência de usuários e corridas</p>
-                </div>
-              </div>
-              <Button onClick={() => setLocation("/admin")} className="w-full" size="lg" variant="outline">
-                Acessar Painel Admin
-              </Button>
-            </Card>
+                <Button onClick={() => setLocation("/admin")} className="w-full" size="lg" variant="outline">
+                  Acessar Painel Admin
+                </Button>
+              </Card>
+            </div>
           </div>
         </div>
+      );
+    }
+    
+    // Regular users already redirected by useEffect
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
