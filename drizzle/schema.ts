@@ -16,7 +16,9 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["passenger", "driver", "admin"]).default("passenger").notNull(),
+  phone: varchar("phone", { length: 20 }),
+  profileCompleted: int("profileCompleted").default(0).notNull(), // 0 = incomplete, 1 = complete
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -25,4 +27,43 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Rides table - stores all ride requests and their status
+ */
+export const rides = mysqlTable("rides", {
+  id: int("id").autoincrement().primaryKey(),
+  passengerId: int("passengerId").notNull().references(() => users.id),
+  driverId: int("driverId").references(() => users.id),
+  status: mysqlEnum("status", ["requested", "accepted", "in_progress", "completed", "cancelled"]).default("requested").notNull(),
+  originAddress: text("originAddress").notNull(),
+  originLat: varchar("originLat", { length: 20 }).notNull(),
+  originLng: varchar("originLng", { length: 20 }).notNull(),
+  destinationAddress: text("destinationAddress").notNull(),
+  destinationLat: varchar("destinationLat", { length: 20 }).notNull(),
+  destinationLng: varchar("destinationLng", { length: 20 }).notNull(),
+  distanceKm: varchar("distanceKm", { length: 10 }),
+  priceEstimate: varchar("priceEstimate", { length: 10 }),
+  finalPrice: varchar("finalPrice", { length: 10 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  acceptedAt: timestamp("acceptedAt"),
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  cancelledAt: timestamp("cancelledAt"),
+});
+
+export type Ride = typeof rides.$inferSelect;
+export type InsertRide = typeof rides.$inferInsert;
+
+/**
+ * Driver locations - tracks real-time location of drivers
+ */
+export const driverLocations = mysqlTable("driverLocations", {
+  id: int("id").autoincrement().primaryKey(),
+  driverId: int("driverId").notNull().references(() => users.id),
+  lat: varchar("lat", { length: 20 }).notNull(),
+  lng: varchar("lng", { length: 20 }).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DriverLocation = typeof driverLocations.$inferSelect;
+export type InsertDriverLocation = typeof driverLocations.$inferInsert;
