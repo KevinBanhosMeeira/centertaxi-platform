@@ -125,3 +125,9 @@
 - [x] Ao selecionar destino: mostrar rota no mapa com Google Directions
 - [x] Criar Tela 2 (COM corrida ativa): mapa com rota + bottom sheet "Procurando motorista"
 - [x] Separar claramente os 2 estados (antes e depois de solicitar corrida)
+
+## Visualização Motorista no Mapa
+- [x] Adicionar marker do carro do motorista no mapa
+- [x] Mostrar rota do motorista até o passageiro quando corrida for aceita
+- [x] Atualizar posição do motorista em tempo real (polling a cada 3 segundos)
+- [x] Adicionar marker do passageiro (localização atual)

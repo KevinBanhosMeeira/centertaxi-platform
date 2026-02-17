@@ -25,10 +25,22 @@ export default function Passenger() {
   const destinationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+  const driverMarkerRef = useRef<google.maps.Marker | null>(null);
+  const passengerMarkerRef = useRef<google.maps.Marker | null>(null);
+  const driverDirectionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   const { data: activeRide, refetch: refetchActiveRide } = trpc.rides.getActive.useQuery(undefined, {
     refetchInterval: 5000,
   });
+
+  // Get driver location when ride is accepted
+  const { data: driverLocation } = trpc.location.getDriver.useQuery(
+    { driverId: activeRide?.driverId || 0 },
+    {
+      enabled: !!activeRide?.driverId && (activeRide.status === "accepted" || activeRide.status === "in_progress"),
+      refetchInterval: 3000, // Update every 3 seconds
+    }
+  );
 
   const requestRide = trpc.rides.request.useMutation({
     onSuccess: () => {
@@ -72,6 +84,16 @@ export default function Passenger() {
     directionsRendererRef.current = new google.maps.DirectionsRenderer({
       map: map,
       suppressMarkers: false,
+    });
+    
+    // Initialize driver directions renderer (for showing driver route to passenger)
+    driverDirectionsRendererRef.current = new google.maps.DirectionsRenderer({
+      map: map,
+      suppressMarkers: true,
+      polylineOptions: {
+        strokeColor: "#003DA5",
+        strokeWeight: 5,
+      },
     });
 
     // Get user's current location
@@ -173,6 +195,74 @@ export default function Passenger() {
         return status;
     }
   };
+
+  // Update driver and passenger markers when driver location changes
+  useEffect(() => {
+    if (!mapRef.current || !activeRide || !driverLocation) return;
+
+    const map = mapRef.current;
+    
+    // Create or update passenger marker
+    if (!passengerMarkerRef.current && originCoords) {
+      passengerMarkerRef.current = new google.maps.Marker({
+        position: originCoords,
+        map: map,
+        title: "Você",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: "#E63946",
+          fillOpacity: 1,
+          strokeColor: "#fff",
+          strokeWeight: 2,
+        },
+      });
+    }
+
+    // Create or update driver marker
+    const driverPos = { lat: parseFloat(driverLocation.lat), lng: parseFloat(driverLocation.lng) };
+    
+    if (!driverMarkerRef.current) {
+      driverMarkerRef.current = new google.maps.Marker({
+        position: driverPos,
+        map: map,
+        title: "Motorista",
+        icon: {
+          path: "M17.402,0H5.643C2.526,0,0,3.467,0,6.584v34.804c0,3.116,2.526,5.644,5.643,5.644h11.759c3.116,0,5.644-2.527,5.644-5.644 V6.584C23.044,3.467,20.518,0,17.402,0z M22.057,14.188v11.665l-2.729,0.351v-4.806L22.057,14.188z M20.625,10.773 c-1.016,3.9-2.219,8.51-2.219,8.51H4.638l-2.222-8.51C2.417,10.773,11.3,7.755,20.625,10.773z M3.748,21.713v4.492l-2.73-0.349 V14.502L3.748,21.713z M1.018,37.938V27.579l2.73,0.343v8.196L1.018,37.938z M2.575,40.882l2.218-3.336h13.771l2.219,3.336H2.575z M19.328,35.805v-7.872l2.729-0.355v10.048L19.328,35.805z",
+          scale: 0.7,
+          fillColor: "#003DA5",
+          fillOpacity: 1,
+          strokeColor: "#fff",
+          strokeWeight: 2,
+          anchor: new google.maps.Point(12, 24),
+        },
+      });
+    } else {
+      driverMarkerRef.current.setPosition(driverPos);
+    }
+
+    // Draw route from driver to passenger (only if ride is accepted, not in progress)
+    if (activeRide.status === "accepted" && originCoords && directionsServiceRef.current && driverDirectionsRendererRef.current) {
+      directionsServiceRef.current.route(
+        {
+          origin: driverPos,
+          destination: originCoords,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === "OK" && result) {
+            driverDirectionsRendererRef.current?.setDirections(result);
+          }
+        }
+      );
+    }
+
+    // Adjust map bounds to show both markers
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(driverPos);
+    if (originCoords) bounds.extend(originCoords);
+    map.fitBounds(bounds);
+  }, [driverLocation, activeRide, originCoords]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
