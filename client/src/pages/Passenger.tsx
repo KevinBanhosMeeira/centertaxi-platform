@@ -46,6 +46,12 @@ export default function Passenger() {
     enabled: activeTab === "activity",
   });
 
+  const { data: recentAddresses } = trpc.addressHistory.getRecent.useQuery(undefined, {
+    enabled: activeTab === "home",
+  });
+
+  const saveAddress = trpc.addressHistory.save.useMutation();
+
   const { data: driverLocation } = trpc.location.getDriver.useQuery(
     { driverId: activeRide?.driverId || 0 },
     {
@@ -221,6 +227,15 @@ export default function Passenger() {
               setDistance(distanceInKm);
               setPrice(distanceInKm * PRICE_PER_KM);
               setShowPriceSheet(true);
+              
+              // Save address to history
+              if (destination && destinationCoords) {
+                saveAddress.mutate({
+                  address: destination,
+                  lat: destinationCoords.lat.toString(),
+                  lng: destinationCoords.lng.toString(),
+                });
+              }
               
               // Add destination marker (Ponto B)
               if (destinationMarkerRef.current) {
@@ -686,33 +701,31 @@ export default function Passenger() {
               </div>
             )}
 
-            {/* Favorite Locations */}
-            {!showPriceSheet && (
+            {/* Recent Addresses */}
+            {!showPriceSheet && recentAddresses && recentAddresses.length > 0 && (
               <div className="space-y-1">
-                <button
-                  className="w-full flex items-center gap-3 p-2.5 hover:bg-gray-50 rounded-xl transition-colors text-left"
-                  onClick={() => handleFavoriteClick("Rua José Bernardo Pinto, 333")}
-                >
-                  <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Clock className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm text-gray-900 truncate">Rua José Bernardo Pinto, 333</p>
-                    <p className="text-xs text-gray-500">São Paulo - SP</p>
-                  </div>
-                </button>
-                <button
-                  className="w-full flex items-center gap-3 p-2.5 hover:bg-gray-50 rounded-xl transition-colors text-left"
-                  onClick={() => handleFavoriteClick("Rodoviária Tietê")}
-                >
-                  <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Clock className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm text-gray-900 truncate">Rodoviária Tietê</p>
-                    <p className="text-xs text-gray-500">São Paulo - SP</p>
-                  </div>
-                </button>
+                <p className="text-xs font-medium text-gray-500 px-2 mb-1">Endereços recentes</p>
+                {recentAddresses.map((addr) => (
+                  <button
+                    key={addr.id}
+                    className="w-full flex items-center gap-3 p-2.5 hover:bg-gray-50 rounded-xl transition-colors text-left"
+                    onClick={() => {
+                      setDestination(addr.address);
+                      setDestinationCoords({
+                        lat: parseFloat(addr.lat),
+                        lng: parseFloat(addr.lng),
+                      });
+                    }}
+                  >
+                    <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <Clock className="h-4 w-4 text-gray-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm text-gray-900 truncate">{addr.address}</p>
+                      <p className="text-xs text-gray-500">São Paulo - SP</p>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
 

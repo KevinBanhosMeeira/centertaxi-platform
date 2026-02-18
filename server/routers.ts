@@ -269,6 +269,32 @@ export const appRouter = router({
       }),
   }),
 
+  addressHistory: router({
+    // Save address to history
+    save: protectedProcedure
+      .input(z.object({
+        address: z.string(),
+        lat: z.string(),
+        lng: z.string(),
+        placeId: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.saveAddressToHistory({
+          userId: ctx.user.id,
+          address: input.address,
+          lat: input.lat,
+          lng: input.lng,
+          placeId: input.placeId,
+        });
+        return { success: true };
+      }),
+
+    // Get recent addresses
+    getRecent: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getRecentAddresses(ctx.user.id);
+    }),
+  }),
+
   admin: router({
     // Get all users
     getUsers: adminProcedure.query(async () => {

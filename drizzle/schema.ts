@@ -69,3 +69,19 @@ export const driverLocations = mysqlTable("driverLocations", {
 
 export type DriverLocation = typeof driverLocations.$inferSelect;
 export type InsertDriverLocation = typeof driverLocations.$inferInsert;
+
+/**
+ * Address history - stores recent addresses searched by users
+ */
+export const addressHistory = mysqlTable("addressHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  address: text("address").notNull(),
+  lat: varchar("lat", { length: 20 }).notNull(),
+  lng: varchar("lng", { length: 20 }).notNull(),
+  placeId: varchar("placeId", { length: 255 }), // Google Places ID for deduplication
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AddressHistory = typeof addressHistory.$inferSelect;
+export type InsertAddressHistory = typeof addressHistory.$inferInsert;

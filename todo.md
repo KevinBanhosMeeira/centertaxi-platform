@@ -172,3 +172,20 @@
 - [x] Adicionar marcador de destino (Ponto B) quando usuário digitar o endereço (círculo vermelho #E63946 com letra B)
 - [x] Traçar rota no mapa mostrando o menor caminho entre origem e destino (linha vermelha)
 - [x] Garantir que ambos os marcadores sejam visíveis simultaneamente no mapa (fitBounds com padding)
+
+## Histórico de Endereços Recentes
+- [ ] Criar tabela no banco para armazenar histórico de endereços por usuário
+- [ ] Criar endpoint tRPC para salvar endereço no histórico
+- [ ] Criar endpoint tRPC para buscar últimos 5 endereços do usuário
+- [ ] Atualizar interface do passageiro para mostrar endereços recentes
+- [ ] Salvar endereço automaticamente quando usuário seleciona um destino
+- [ ] Permitir clicar em endereço recente para preencher campo de destino
+- [ ] Escrever testes para funcionalidade de histórico
+
+## Substituição de Ícone PWA - Logo Oficial
+- [x] Gerar icon-192.png usando logo oficial CenterTáxi (fundo cinza claro #E8E8E8)
+- [x] Gerar icon-512.png usando logo oficial CenterTáxi (fundo cinza claro #E8E8E8)
+- [x] Atualizar apple-touch-icon (180x180) com logo oficial
+- [x] Atualizar favicons (16x16, 32x32) com logo oficial
+- [x] Manter theme_color azul (#003DA5) - cor principal da marca
+- [x] Atualizar background_color para #E8E8E8 (cor de fundo do logo)

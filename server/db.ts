@@ -1,6 +1,6 @@
 import { eq, and, or, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, rides, InsertRide, Ride, driverLocations, InsertDriverLocation } from "../drizzle/schema";
+import { InsertUser, users, rides, InsertRide, Ride, driverLocations, InsertDriverLocation, addressHistory, InsertAddressHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -238,4 +238,42 @@ export async function getDriverLocation(driverId: number) {
 
   const result = await db.select().from(driverLocations).where(eq(driverLocations.driverId, driverId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+// Address history helpers
+export async function saveAddressToHistory(data: InsertAddressHistory) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if address already exists for this user (by placeId if available)
+  if (data.placeId) {
+    const existing = await db.select().from(addressHistory)
+      .where(and(
+        eq(addressHistory.userId, data.userId),
+        eq(addressHistory.placeId, data.placeId)
+      ))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update the timestamp to move it to the top
+      await db.update(addressHistory)
+        .set({ createdAt: new Date() })
+        .where(eq(addressHistory.id, existing[0].id));
+      return;
+    }
+  }
+
+  // Insert new address
+  await db.insert(addressHistory).values(data);
+}
+
+export async function getRecentAddresses(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select()
+    .from(addressHistory)
+    .where(eq(addressHistory.userId, userId))
+    .orderBy(desc(addressHistory.createdAt))
+    .limit(5);
 }
