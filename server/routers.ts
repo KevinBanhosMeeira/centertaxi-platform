@@ -295,6 +295,61 @@ export const appRouter = router({
     }),
   }),
 
+  ratings: router({
+    // Save rating after ride completion
+    create: protectedProcedure
+      .input(z.object({
+        rideId: z.number(),
+        driverId: z.number(),
+        rating: z.number().min(1).max(5),
+        comment: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Verify the ride belongs to this passenger and is completed
+        const ride = await db.getRideById(input.rideId);
+        if (!ride) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Corrida não encontrada" });
+        }
+        if (ride.passengerId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Você não pode avaliar esta corrida" });
+        }
+        if (ride.status !== "completed") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Apenas corridas finalizadas podem ser avaliadas" });
+        }
+
+        // Check if already rated
+        const existingRating = await db.getRatingByRideId(input.rideId);
+        if (existingRating) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Você já avaliou esta corrida" });
+        }
+
+        await db.createRating({
+          rideId: input.rideId,
+          passengerId: ctx.user.id,
+          driverId: input.driverId,
+          rating: input.rating,
+          comment: input.comment,
+        });
+
+        return { success: true };
+      }),
+
+    // Get driver's average rating and reviews
+    getDriverRatings: publicProcedure
+      .input(z.object({ driverId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getDriverRatings(input.driverId);
+      }),
+
+    // Check if ride has been rated
+    checkRideRated: protectedProcedure
+      .input(z.object({ rideId: z.number() }))
+      .query(async ({ input }) => {
+        const rating = await db.getRatingByRideId(input.rideId);
+        return { rated: !!rating };
+      }),
+  }),
+
   admin: router({
     // Get all users
     getUsers: adminProcedure.query(async () => {

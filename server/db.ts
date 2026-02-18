@@ -1,6 +1,6 @@
 import { eq, and, or, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, rides, InsertRide, Ride, driverLocations, InsertDriverLocation, addressHistory, InsertAddressHistory } from "../drizzle/schema";
+import { InsertUser, users, rides, InsertRide, Ride, driverLocations, InsertDriverLocation, addressHistory, InsertAddressHistory, ratings, InsertRating } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -276,4 +276,50 @@ export async function getRecentAddresses(userId: number) {
     .where(eq(addressHistory.userId, userId))
     .orderBy(desc(addressHistory.createdAt))
     .limit(5);
+}
+
+// ============================================================================
+// Ratings Functions
+// ============================================================================
+
+export async function createRating(data: InsertRating) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(ratings).values(data);
+}
+
+export async function getRatingByRideId(rideId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select()
+    .from(ratings)
+    .where(eq(ratings.rideId, rideId))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+export async function getDriverRatings(driverId: number) {
+  const db = await getDb();
+  if (!db) return { average: 0, count: 0, ratings: [] };
+
+  const driverRatings = await db.select()
+    .from(ratings)
+    .where(eq(ratings.driverId, driverId))
+    .orderBy(desc(ratings.createdAt));
+
+  if (driverRatings.length === 0) {
+    return { average: 0, count: 0, ratings: [] };
+  }
+
+  const sum = driverRatings.reduce((acc, r) => acc + r.rating, 0);
+  const average = sum / driverRatings.length;
+
+  return {
+    average: Math.round(average * 10) / 10, // Round to 1 decimal
+    count: driverRatings.length,
+    ratings: driverRatings,
+  };
 }

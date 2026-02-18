@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { MapView } from "@/components/Map";
+import { RatingModal } from "@/components/RatingModal";
 
 const PRICE_PER_KM = 3.5;
 
@@ -27,6 +28,8 @@ export default function Passenger() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduled, setIsScheduled] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [completedRideData, setCompletedRideData] = useState<{ rideId: number; driverId: number; driverName: string } | null>(null);
 
   const mapRef = useRef<google.maps.Map | null>(null);
   const destinationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -366,6 +369,23 @@ export default function Passenger() {
 
     requestRide.mutate(mutationData);
   };
+
+  const { data: rideRatedCheck } = trpc.ratings.checkRideRated.useQuery(
+    { rideId: activeRide?.id || 0 },
+    { enabled: !!activeRide && activeRide.status === "completed" }
+  );
+
+  // Detect when ride is completed and show rating modal
+  useEffect(() => {
+    if (activeRide && activeRide.status === "completed" && activeRide.driverId && rideRatedCheck && !rideRatedCheck.rated) {
+      setCompletedRideData({
+        rideId: activeRide.id,
+        driverId: activeRide.driverId,
+        driverName: "Motorista", // TODO: Get driver name from activeRide
+      });
+      setShowRatingModal(true);
+    }
+  }, [activeRide?.status, activeRide?.id, rideRatedCheck]);
 
   const handleFavoriteClick = (address: string) => {
     setDestination(address);
@@ -923,6 +943,20 @@ export default function Passenger() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && completedRideData && (
+        <RatingModal
+          rideId={completedRideData.rideId}
+          driverId={completedRideData.driverId}
+          driverName={completedRideData.driverName}
+          onClose={() => setShowRatingModal(false)}
+          onSuccess={() => {
+            setShowRatingModal(false);
+            setCompletedRideData(null);
+          }}
+        />
       )}
     </div>
   );

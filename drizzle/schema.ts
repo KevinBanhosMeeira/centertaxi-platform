@@ -85,3 +85,19 @@ export const addressHistory = mysqlTable("addressHistory", {
 
 export type AddressHistory = typeof addressHistory.$inferSelect;
 export type InsertAddressHistory = typeof addressHistory.$inferInsert;
+
+/**
+ * Ratings - stores passenger ratings for drivers after ride completion
+ */
+export const ratings = mysqlTable("ratings", {
+  id: int("id").autoincrement().primaryKey(),
+  rideId: int("rideId").notNull().references(() => rides.id),
+  passengerId: int("passengerId").notNull().references(() => users.id),
+  driverId: int("driverId").notNull().references(() => users.id),
+  rating: int("rating").notNull(), // 1-5 stars
+  comment: text("comment"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Rating = typeof ratings.$inferSelect;
+export type InsertRating = typeof ratings.$inferInsert;

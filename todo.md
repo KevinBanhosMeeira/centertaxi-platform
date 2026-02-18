@@ -189,3 +189,13 @@
 - [x] Atualizar favicons (16x16, 32x32) com logo oficial
 - [x] Manter theme_color azul (#003DA5) - cor principal da marca
 - [x] Atualizar background_color para #E8E8E8 (cor de fundo do logo)
+
+## Sistema de Avaliação Pós-Corrida
+- [x] Criar tabela ratings no banco (rideId, passengerId, driverId, rating 1-5, comment, createdAt)
+- [x] Criar endpoint tRPC para salvar avaliação (ratings.create)
+- [x] Criar endpoint tRPC para buscar avaliações de um motorista (ratings.getDriverRatings)
+- [x] Criar endpoint tRPC para verificar se corrida foi avaliada (ratings.checkRideRated)
+- [x] Criar modal de avaliação com estrelas clicáveis (1-5) e hover effect
+- [x] Adicionar campo de comentário opcional no modal (500 caracteres)
+- [x] Exibir modal automaticamente quando corrida for finalizada
+- [x] Escrever testes para funcionalidade de avaliação (14/16 testes passando)
