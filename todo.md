@@ -151,3 +151,18 @@
 - [x] Adicionar campos scheduledAt e isScheduled no schema do banco
 - [x] Atualizar endpoint de request ride para suportar agendamento
 - [x] Testes vitest passando (8/8)
+
+## Correções PWA Android
+- [x] Investigar e corrigir problema de telas não carregando no Android
+- [x] Verificar console errors no Android (erros de query do banco - não afetam PWA)
+- [x] Testar compatibilidade de rotas e navegação no PWA
+
+## Atualização de Ícones e Splash Screen
+- [x] Gerar ícones PWA em múltiplos tamanhos (192x192, 512x512, etc) a partir do logo CenterTáxi
+- [x] Criar splash screen com logo CenterTáxi (formato 16:9) em 9 tamanhos diferentes
+- [x] Atualizar manifest.json com novos ícones e cores da marca (#003DA5)
+- [x] Atualizar favicon (16x16, 32x32)
+- [x] Adicionar apple-touch-icon (180x180)
+- [x] Adicionar meta tags para iOS splash screens (10 tamanhos diferentes de telas)
+- [x] Atualizar theme-color para azul da marca (#003DA5)
+- [x] Adicionar meta tags apple-mobile-web-app
