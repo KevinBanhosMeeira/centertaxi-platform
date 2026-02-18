@@ -137,12 +137,128 @@ export default function Passenger() {
       },
     });
 
-    // Disable some controls for cleaner mobile look
+    // Disable some controls for cleaner mobile look and POI clicks
     map.setOptions({
       mapTypeControl: false,
       fullscreenControl: false,
       streetViewControl: false,
       zoomControl: true,
+      clickableIcons: false,
+      // Apply custom styles to remove ALL POIs and use minimalist design (Uber-style)
+      styles: [
+        // Remove ALL POIs (Points of Interest) - no commercial establishments, attractions, etc.
+        {
+          featureType: "poi",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.business",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.attraction",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.government",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.medical",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "labels",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.place_of_worship",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.school",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi.sports_complex",
+          stylers: [{ visibility: "off" }],
+        },
+        // Remove transit icons
+        {
+          featureType: "transit",
+          elementType: "labels.icon",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "transit.station",
+          stylers: [{ visibility: "off" }],
+        },
+        // Minimalist road styling (light gray)
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#f5f5f5" }],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.icon",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#e8e8e8" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9e9e9e" }],
+        },
+        {
+          featureType: "road.arterial",
+          elementType: "geometry",
+          stylers: [{ color: "#f5f5f5" }],
+        },
+        {
+          featureType: "road.arterial",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9e9e9e" }],
+        },
+        {
+          featureType: "road.local",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#b0b0b0" }],
+        },
+        // Landscape (very light gray background)
+        {
+          featureType: "landscape",
+          elementType: "geometry",
+          stylers: [{ color: "#fafafa" }],
+        },
+        // Water (light blue)
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#c9e6f2" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9e9e9e" }],
+        },
+        // Administrative labels (gray)
+        {
+          featureType: "administrative",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9e9e9e" }],
+        },
+        {
+          featureType: "administrative.neighborhood",
+          elementType: "labels",
+          stylers: [{ visibility: "simplified" }],
+        },
+      ],
     });
 
     if (navigator.geolocation) {
@@ -154,7 +270,7 @@ export default function Passenger() {
           };
           setOriginCoords(pos);
           map.setCenter(pos);
-          map.setZoom(16);
+          map.setZoom(17); // Higher zoom = fewer POIs visible
           
           // Add origin marker (Ponto A)
           if (originMarkerRef.current) {
@@ -184,7 +300,7 @@ export default function Passenger() {
           const spCenter = { lat: -23.5505, lng: -46.6333 };
           setOriginCoords(spCenter);
           map.setCenter(spCenter);
-          map.setZoom(14);
+          map.setZoom(17); // Higher zoom = fewer POIs visible
         }
       );
     }

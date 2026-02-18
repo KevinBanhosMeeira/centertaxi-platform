@@ -199,3 +199,13 @@
 - [x] Adicionar campo de comentário opcional no modal (500 caracteres)
 - [x] Exibir modal automaticamente quando corrida for finalizada
 - [x] Escrever testes para funcionalidade de avaliação (14/16 testes passando)
+
+## Customização do Design do Google Maps
+- [x] Remover POIs (Points of Interest) - propagandas, estabelecimentos comerciais reduzidos drasticamente
+- [x] Aplicar estilo minimalista similar ao Uber
+- [x] Usar cores neutras (cinza claro #f5f5f5 para ruas, #fafafa para fundo)
+- [x] Ocultar labels desnecessários via visibility: off em todos os tipos de POI
+- [x] Manter apenas informações essenciais (ruas principais, água em #c9e6f2, parques)
+- [x] Destacar apenas a rota e os marcadores de origem/destino
+- [x] Desabilitar POIs clicáveis (clickableIcons: false)
+- [x] Aumentar zoom padrão para 17 para reduzir POIs visíveis
