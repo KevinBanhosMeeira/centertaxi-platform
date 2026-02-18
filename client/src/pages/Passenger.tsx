@@ -35,6 +35,8 @@ export default function Passenger() {
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
   const passengerMarkerRef = useRef<google.maps.Marker | null>(null);
   const driverDirectionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+  const originMarkerRef = useRef<google.maps.Marker | null>(null);
+  const destinationMarkerRef = useRef<google.maps.Marker | null>(null);
 
   const { data: activeRide, refetch: refetchActiveRide } = trpc.rides.getActive.useQuery(undefined, {
     refetchInterval: 5000,
@@ -66,6 +68,10 @@ export default function Passenger() {
       setScheduleTime("");
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setDirections({ routes: [] } as any);
+      }
+      if (destinationMarkerRef.current) {
+        destinationMarkerRef.current.setMap(null);
+        destinationMarkerRef.current = null;
       }
     },
     onError: (error) => {
@@ -106,7 +112,7 @@ export default function Passenger() {
     directionsServiceRef.current = new google.maps.DirectionsService();
     directionsRendererRef.current = new google.maps.DirectionsRenderer({
       map,
-      suppressMarkers: false,
+      suppressMarkers: true,
       polylineOptions: {
         strokeColor: "#E63946",
         strokeWeight: 4,
@@ -140,6 +146,29 @@ export default function Passenger() {
           setOriginCoords(pos);
           map.setCenter(pos);
           map.setZoom(16);
+          
+          // Add origin marker (Ponto A)
+          if (originMarkerRef.current) {
+            originMarkerRef.current.setMap(null);
+          }
+          originMarkerRef.current = new google.maps.Marker({
+            position: pos,
+            map,
+            title: "Sua localização",
+            label: {
+              text: "A",
+              color: "white",
+              fontWeight: "bold",
+            },
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 12,
+              fillColor: "#003DA5",
+              fillOpacity: 1,
+              strokeColor: "white",
+              strokeWeight: 3,
+            },
+          });
         },
         () => {
           // Fallback to São Paulo center
@@ -192,6 +221,35 @@ export default function Passenger() {
               setDistance(distanceInKm);
               setPrice(distanceInKm * PRICE_PER_KM);
               setShowPriceSheet(true);
+              
+              // Add destination marker (Ponto B)
+              if (destinationMarkerRef.current) {
+                destinationMarkerRef.current.setMap(null);
+              }
+              destinationMarkerRef.current = new google.maps.Marker({
+                position: destinationCoords,
+                map: mapRef.current!,
+                title: "Destino",
+                label: {
+                  text: "B",
+                  color: "white",
+                  fontWeight: "bold",
+                },
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 12,
+                  fillColor: "#E63946",
+                  fillOpacity: 1,
+                  strokeColor: "white",
+                  strokeWeight: 3,
+                },
+              });
+              
+              // Adjust map bounds to show both markers
+              const bounds = new google.maps.LatLngBounds();
+              bounds.extend(originCoords);
+              bounds.extend(destinationCoords);
+              mapRef.current?.fitBounds(bounds, 100);
             }
           } else {
             toast.error("Não foi possível calcular a rota");

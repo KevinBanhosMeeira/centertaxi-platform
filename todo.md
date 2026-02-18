@@ -166,3 +166,9 @@
 - [x] Adicionar meta tags para iOS splash screens (10 tamanhos diferentes de telas)
 - [x] Atualizar theme-color para azul da marca (#003DA5)
 - [x] Adicionar meta tags apple-mobile-web-app
+
+## Melhorias Visuais do Mapa - Marcadores e Rota
+- [x] Adicionar marcador de origem (Ponto A) mostrando localização atual do usuário (círculo azul #003DA5 com letra A)
+- [x] Adicionar marcador de destino (Ponto B) quando usuário digitar o endereço (círculo vermelho #E63946 com letra B)
+- [x] Traçar rota no mapa mostrando o menor caminho entre origem e destino (linha vermelha)
+- [x] Garantir que ambos os marcadores sejam visíveis simultaneamente no mapa (fitBounds com padding)
