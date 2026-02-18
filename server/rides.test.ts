@@ -85,6 +85,32 @@ describe("rides router", () => {
     expect(Array.isArray(rides)).toBe(true);
   });
 
+  it("passenger can request a scheduled ride", async () => {
+    const ctx = createPassengerContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const scheduledDate = new Date();
+    scheduledDate.setDate(scheduledDate.getDate() + 1);
+
+    const ride = await caller.rides.request({
+      originAddress: "Rua C, 789",
+      originLat: "-23.5505",
+      originLng: "-46.6333",
+      destinationAddress: "Rua D, 101",
+      destinationLat: "-23.5700",
+      destinationLng: "-46.6500",
+      distanceKm: "8.0",
+      priceEstimate: "28.00",
+      scheduledAt: scheduledDate.toISOString(),
+      isScheduled: "1",
+    });
+
+    expect(ride).toBeDefined();
+    expect(ride.passengerId).toBe(1);
+    expect(ride.isScheduled).toBe(1);
+    expect(ride.scheduledAt).toBeDefined();
+  });
+
   it("driver cannot request a ride", async () => {
     const ctx = createDriverContext();
     const caller = appRouter.createCaller(ctx);

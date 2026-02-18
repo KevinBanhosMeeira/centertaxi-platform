@@ -49,6 +49,8 @@ export const rides = mysqlTable("rides", {
   startedAt: timestamp("startedAt"),
   completedAt: timestamp("completedAt"),
   cancelledAt: timestamp("cancelledAt"),
+  scheduledAt: timestamp("scheduledAt"),
+  isScheduled: int("isScheduled").default(0).notNull(), // 0 = immediate, 1 = scheduled
 });
 
 export type Ride = typeof rides.$inferSelect;

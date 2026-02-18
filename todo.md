@@ -131,3 +131,23 @@
 - [x] Mostrar rota do motorista até o passageiro quando corrida for aceita
 - [x] Atualizar posição do motorista em tempo real (polling a cada 3 segundos)
 - [x] Adicionar marker do passageiro (localização atual)
+
+## Correção do Mapa - Layout
+- [x] Corrigir mapa que fica "dançando" acima da localização do usuário
+- [x] Separação clara e definida entre mapa e bottom sheet
+- [x] Garantir que logo do Google Maps fique visível no rodapé do mapa
+- [x] Centralizar mapa corretamente na localização do usuário
+
+## Barra de Navegação Inferior (Mobile)
+- [x] Implementar bottom navigation com 3 abas
+- [x] Aba "Início" - tela principal do passageiro com mapa
+- [x] Aba "Atividade" - histórico de corridas realizadas
+- [x] Aba "Conta" - perfil e configurações do usuário
+
+## Agendamento de Corridas
+- [x] Adicionar funcionalidade de agendamento de corridas
+- [x] Implementar seletor de data e hora
+- [x] Integrar agendamento no fluxo de solicitação de corrida
+- [x] Adicionar campos scheduledAt e isScheduled no schema do banco
+- [x] Atualizar endpoint de request ride para suportar agendamento
+- [x] Testes vitest passando (8/8)

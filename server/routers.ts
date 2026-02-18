@@ -84,22 +84,39 @@ export const appRouter = router({
         destinationLng: z.string(),
         distanceKm: z.string(),
         priceEstimate: z.string(),
+        scheduledAt: z.string().optional(),
+        isScheduled: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Check if passenger already has an active ride
-        const activeRide = await db.getActiveRideForPassenger(ctx.user.id);
-        if (activeRide) {
-          throw new TRPCError({ 
-            code: "BAD_REQUEST", 
-            message: "Você já tem uma corrida ativa" 
-          });
+        // Check if passenger already has an active ride (only for immediate rides)
+        if (!input.isScheduled || input.isScheduled !== "1") {
+          const activeRide = await db.getActiveRideForPassenger(ctx.user.id);
+          if (activeRide) {
+            throw new TRPCError({ 
+              code: "BAD_REQUEST", 
+              message: "Você já tem uma corrida ativa" 
+            });
+          }
         }
 
-        const ride = await db.createRide({
+        const rideData: any = {
           passengerId: ctx.user.id,
-          ...input,
-        });
+          originAddress: input.originAddress,
+          originLat: input.originLat,
+          originLng: input.originLng,
+          destinationAddress: input.destinationAddress,
+          destinationLat: input.destinationLat,
+          destinationLng: input.destinationLng,
+          distanceKm: input.distanceKm,
+          priceEstimate: input.priceEstimate,
+        };
 
+        if (input.isScheduled === "1" && input.scheduledAt) {
+          rideData.scheduledAt = new Date(input.scheduledAt);
+          rideData.isScheduled = 1;
+        }
+
+        const ride = await db.createRide(rideData);
         return ride;
       }),
 
