@@ -31,13 +31,14 @@ export interface WSAuthPayload {
 
 export interface WSRideOfferedPayload {
   rideId: number;
-  passengerId: number;
+  passengerId?: number;
   originAddress: string;
   destinationAddress: string;
   distanceKm: string;
   priceEstimate: string;
   originLat: string;
   originLng: string;
+  distanceToPickup?: string; // Distance from driver to pickup location
 }
 
 export interface WSRideStatusChangedPayload {

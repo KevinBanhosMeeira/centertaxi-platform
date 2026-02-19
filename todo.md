@@ -304,3 +304,18 @@ Ver detalhes completos em `ROADMAP.md`
 - [ ] Integrar useWebSocket no frontend (Passenger e Driver)
 - [ ] Implementar realtimeManager.notifyRideOffered() quando corrida for oferecida (matching)
 - [ ] Implementar tracking de localização do motorista em tempo real
+
+
+## FASE 6: Ride Matching System (CONCLUÍDA)
+- [x] Criar serviço de matching (server/domains/rides/matching.ts)
+- [x] Implementar cálculo de distância Haversine (lat/lng)
+- [x] Buscar motoristas online dentro de raio configurável (padrão: 5km)
+- [x] Ordenar motoristas por distância (mais próximo primeiro)
+- [x] Enviar notificação ride_offered via WebSocket para motoristas
+- [x] Integrar matching ao endpoint rides.request
+- [x] Implementar timeout de matching (30s sem resposta → oferece para mais motoristas)
+- [x] Implementar re-matching automático se nenhum motorista aceitar
+- [x] Expansão gradual: 5 motoristas no primeiro match, 10 no re-match
+- [x] Adicionar campo distanceToPickup no WSRideOfferedPayload
+- [ ] Adicionar configuração de raio de busca em tenantSettings
+- [ ] Criar testes para matching service

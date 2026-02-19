@@ -6,6 +6,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { TRPCError } from "@trpc/server";
 import { realtimeManager } from "./realtime/websocket";
+import { notifyDriversAboutRide, scheduleReMatching } from "./domains/rides/matching";
 
 // Helper procedures
 const passengerProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -118,6 +119,39 @@ export const appRouter = router({
         }
 
         const ride = await db.createRide(rideData);
+        
+        // Start matching process for immediate rides
+        if (!input.isScheduled || input.isScheduled !== "1") {
+          console.log(`[Matching] Starting matching for ride ${ride.id}`);
+          
+          // Notify nearby drivers
+          const notifiedCount = await notifyDriversAboutRide(
+            ride.id,
+            input.originLat,
+            input.originLng,
+            input.originAddress,
+            input.destinationAddress,
+            input.distanceKm,
+            input.priceEstimate
+          );
+          
+          console.log(`[Matching] Notified ${notifiedCount} drivers for ride ${ride.id}`);
+          
+          // Schedule re-matching if no driver accepts within 30 seconds
+          if (notifiedCount > 0) {
+            scheduleReMatching(
+              ride.id,
+              input.originLat,
+              input.originLng,
+              input.originAddress,
+              input.destinationAddress,
+              input.distanceKm,
+              input.priceEstimate,
+              30
+            );
+          }
+        }
+        
         return ride;
       }),
 
