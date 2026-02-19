@@ -47,8 +47,10 @@ export const rides = mysqlTable("rides", {
   destinationLat: varchar("destinationLat", { length: 20 }).notNull(),
   destinationLng: varchar("destinationLng", { length: 20 }).notNull(),
   distanceKm: varchar("distanceKm", { length: 10 }),
+  durationMinutes: int("durationMinutes"), // Estimated duration in minutes
   priceEstimate: varchar("priceEstimate", { length: 10 }),
   finalPrice: varchar("finalPrice", { length: 10 }),
+  fareBreakdown: text("fareBreakdown"), // JSON: { baseFare, distanceFare, timeFare, total, multiplier }
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   acceptedAt: timestamp("acceptedAt"),
   startedAt: timestamp("startedAt"),

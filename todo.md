@@ -174,13 +174,13 @@
 - [x] Garantir que ambos os marcadores sejam visíveis simultaneamente no mapa (fitBounds com padding)
 
 ## Histórico de Endereços Recentes
-- [ ] Criar tabela no banco para armazenar histórico de endereços por usuário
-- [ ] Criar endpoint tRPC para salvar endereço no histórico
-- [ ] Criar endpoint tRPC para buscar últimos 5 endereços do usuário
-- [ ] Atualizar interface do passageiro para mostrar endereços recentes
-- [ ] Salvar endereço automaticamente quando usuário seleciona um destino
-- [ ] Permitir clicar em endereço recente para preencher campo de destino
-- [ ] Escrever testes para funcionalidade de histórico
+- [x] Criar tabela no banco para armazenar histórico de endereços por usuário
+- [x] Criar endpoint tRPC para salvar endereço no histórico
+- [x] Criar endpoint tRPC para buscar últimos 5 endereços do usuário
+- [x] Atualizar interface do passageiro para mostrar endereços recentes
+- [x] Salvar endereço automaticamente quando usuário seleciona um destino
+- [x] Permitir clicar em endereço recente para preencher campo de destino
+- [x] Escrever testes para funcionalidade de histórico
 
 ## Substituição de Ícone PWA - Logo Oficial
 - [x] Gerar icon-192.png usando logo oficial CenterTáxi (fundo cinza claro #E8E8E8)
@@ -210,6 +210,21 @@
 - [x] Desabilitar POIs clicáveis (clickableIcons: false)
 - [x] Aumentar zoom padrão para 17 para reduzir POIs visíveis
 
+## Sistema de Cálculo de Tarifa Dinâmica
+- [x] Adicionar campos durationMinutes e fareBreakdown na tabela rides
+- [x] Criar serviço de cálculo de tarifa (pricing.ts) com breakdown detalhado
+- [x] Implementar tarifação baseada em: tarifa base + distância (R$/km) + tempo (R$/min)
+- [x] Aplicar tarifa mínima quando subtotal for menor que o mínimo configurado
+- [x] Implementar surge pricing (tarifa dinâmica) com multiplicadores:
+  - 1.5x (50% surge) em horários de pico: seg-sex 7-9h e 17-20h
+  - 1.8x (80% surge) em noites de sexta/sábado: 22h-2h
+- [x] Criar função getTenantSettings no db.ts para buscar configurações de tarifa
+- [x] Criar endpoint tRPC rides.calculateFare para calcular tarifa no backend
+- [x] Integrar cálculo de tarifa no frontend do passageiro
+- [x] Exibir breakdown detalhado da tarifa no bottom sheet (base + distância + tempo + surge)
+- [x] Mostrar multiplicador de surge pricing quando aplicável
+- [x] Escrever testes completos para serviço de pricing (7/7 testes passando)
+
 
 ---
 
@@ -223,11 +238,11 @@ Ver detalhes completos em `ROADMAP.md`
 - [ ] Integrar todos os domains no routers.ts principal
 
 ## Fase 2: Banco Multi-Tenant
-- [ ] Criar tabela tenants (nome, logo, cores, cidade)
-- [ ] Criar tabela tenant_settings
-- [ ] Criar tabela vehicles (motoristas)
-- [ ] Criar tabela ride_events (log de eventos)
-- [ ] Adicionar tenant_id em users, drivers, rides
+- [x] Criar tabela tenants (nome, logo, cores, cidade)
+- [x] Criar tabela tenant_settings (com campos de tarifa: baseFare, pricePerKm, pricePerMinute, minimumFare)
+- [x] Criar tabela vehicles (motoristas)
+- [x] Criar tabela ride_events (log de eventos)
+- [x] Adicionar tenant_id em users, drivers, rides
 
 ## Fase 3: Ride State Machine
 - [ ] Implementar estados: REQUESTED → MATCHING → OFFERED → ACCEPTED → DRIVER_EN_ROUTE → DRIVER_ARRIVED → IN_PROGRESS → COMPLETED / CANCELED
@@ -332,3 +347,16 @@ Ver detalhes completos em `ROADMAP.md`
 - [x] Adicionar método notifyDriverLocationUpdate ao realtimeManager
 - [ ] Implementar atualização automática a cada 3-5 segundos no app do motorista
 - [ ] Testar fluxo completo: motorista move → passageiro vê em tempo real
+
+
+## FASE 8: Sistema de Cálculo de Tarifa (EM ANDAMENTO)
+- [ ] Adicionar campos de configuração de tarifa em tenantSettings (baseFare, farePerKm, farePerMinute, minimumFare, surgePricing)
+- [ ] Criar serviço de cálculo de tarifa (server/domains/rides/pricing.ts)
+- [ ] Implementar cálculo: baseFare + (distanceKm * farePerKm) + (durationMinutes * farePerMinute)
+- [ ] Aplicar tarifa mínima se calculado for menor
+- [ ] Implementar multiplicador dinâmico para horários de pico (opcional)
+- [ ] Criar endpoint tRPC rides.calculateFare para calcular tarifa antes de solicitar corrida
+- [ ] Atualizar frontend para chamar calculateFare quando destino for selecionado
+- [ ] Exibir breakdown da tarifa (base + distância + tempo) no sheet de preço
+- [ ] Armazenar tarifa calculada no banco quando corrida for criada
+- [ ] Adicionar campo fareBreakdown em rides para auditoria

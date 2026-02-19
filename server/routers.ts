@@ -7,6 +7,7 @@ import * as db from "./db";
 import { TRPCError } from "@trpc/server";
 import { realtimeManager } from "./realtime/websocket";
 import { notifyDriversAboutRide, scheduleReMatching } from "./domains/rides/matching";
+import { calculateFare, serializeFareBreakdown } from "./domains/rides/pricing";
 
 // Helper procedures
 const passengerProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -75,6 +76,36 @@ export const appRouter = router({
   }),
 
   rides: router({
+    // Calculate fare estimate
+    calculateFare: publicProcedure
+      .input(z.object({
+        distanceKm: z.number(),
+        durationMinutes: z.number(),
+        tenantId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Get tenant settings (default to tenant 1 for now)
+        const tenantId = input.tenantId || 1;
+        const settings = await db.getTenantSettings(tenantId);
+        
+        if (!settings) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Configurações do tenant não encontradas" });
+        }
+
+        const fareBreakdown = calculateFare({
+          distanceKm: input.distanceKm,
+          durationMinutes: input.durationMinutes,
+          baseFare: parseFloat(settings.baseFare),
+          pricePerKm: parseFloat(settings.pricePerKm),
+          pricePerMinute: parseFloat(settings.pricePerMinute),
+          minimumFare: parseFloat(settings.minimumFare),
+          currency: settings.currency,
+          surgePricing: false, // TODO: Add surge pricing logic based on demand
+        });
+
+        return fareBreakdown;
+      }),
+
     // Passenger: create ride request
     request: passengerProcedure
       .input(z.object({

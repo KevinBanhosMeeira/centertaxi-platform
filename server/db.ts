@@ -1,6 +1,6 @@
 import { eq, and, or, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, rides, InsertRide, Ride, driverLocations, InsertDriverLocation, addressHistory, InsertAddressHistory, ratings, InsertRating } from "../drizzle/schema";
+import { InsertUser, users, rides, InsertRide, Ride, driverLocations, InsertDriverLocation, addressHistory, InsertAddressHistory, ratings, InsertRating, tenantSettings, TenantSettings } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -322,4 +322,20 @@ export async function getDriverRatings(driverId: number) {
     count: driverRatings.length,
     ratings: driverRatings,
   };
+}
+
+// ============================================================================
+// Tenant Settings Functions
+// ============================================================================
+
+export async function getTenantSettings(tenantId: number): Promise<TenantSettings | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select()
+    .from(tenantSettings)
+    .where(eq(tenantSettings.tenantId, tenantId))
+    .limit(1);
+
+  return result[0] || null;
 }

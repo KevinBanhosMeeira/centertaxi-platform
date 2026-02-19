@@ -11,7 +11,16 @@ import { MapView } from "@/components/Map";
 import { RatingModal } from "@/components/RatingModal";
 import { useWebSocket } from "@/shared/hooks/useWebSocket";
 
-const PRICE_PER_KM = 3.5;
+// Fare breakdown interface
+interface FareBreakdown {
+  baseFare: number;
+  distanceFare: number;
+  timeFare: number;
+  subtotal: number;
+  multiplier: number;
+  total: number;
+  currency: string;
+}
 
 type TabType = "home" | "activity" | "account";
 
@@ -29,7 +38,9 @@ export default function Passenger() {
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
   const [price, setPrice] = useState<number | null>(null);
+  const [fareBreakdown, setFareBreakdown] = useState<FareBreakdown | null>(null);
   const [showPriceSheet, setShowPriceSheet] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -62,6 +73,19 @@ export default function Passenger() {
   });
 
   const saveAddress = trpc.addressHistory.save.useMutation();
+
+  const calculateFareMutation = trpc.rides.calculateFare.useMutation({
+    onSuccess: (data) => {
+      setFareBreakdown(data);
+      setPrice(data.total);
+      setShowPriceSheet(true);
+    },
+    onError: (error) => {
+      toast.error("Erro ao calcular tarifa: " + error.message);
+      // Fallback: show sheet anyway with null price
+      setShowPriceSheet(true);
+    },
+  });
 
   const { data: driverLocation } = trpc.location.getDriver.useQuery(
     { driverId: activeRide?.driverId || 0 },
@@ -350,10 +374,18 @@ export default function Passenger() {
             const route = result.routes[0];
             if (route) {
               const distanceInMeters = route.legs[0]?.distance?.value || 0;
+              const durationInSeconds = route.legs[0]?.duration?.value || 0;
               const distanceInKm = distanceInMeters / 1000;
+              const durationInMinutes = Math.ceil(durationInSeconds / 60);
+              
               setDistance(distanceInKm);
-              setPrice(distanceInKm * PRICE_PER_KM);
-              setShowPriceSheet(true);
+              setDuration(durationInMinutes);
+              
+              // Calculate fare using backend
+              calculateFareMutation.mutate({
+                distanceKm: distanceInKm,
+                durationMinutes: durationInMinutes,
+              });
               
               // Save address to history
               if (destination && destinationCoords) {
@@ -927,8 +959,13 @@ export default function Passenger() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-[#E63946]">R$ {price.toFixed(2)}</p>
-                      <p className="text-[10px] text-gray-500">{distance.toFixed(1)} km · {Math.ceil(distance / 0.5)} min</p>
+                      <p className="text-xl font-bold text-[#E63946]">
+                        {fareBreakdown?.currency || "R$"} {price.toFixed(2)}
+                        {fareBreakdown && fareBreakdown.multiplier > 1 && (
+                          <span className="text-xs text-orange-600 ml-1">({fareBreakdown.multiplier}x)</span>
+                        )}
+                      </p>
+                      <p className="text-[10px] text-gray-500">{distance.toFixed(1)} km · {duration || Math.ceil(distance / 0.5)} min</p>
                     </div>
                   </div>
                 </div>
@@ -946,6 +983,35 @@ export default function Passenger() {
                     <p className="text-xl font-bold text-gray-400">R$ {(price * 1.3).toFixed(2)}</p>
                   </div>
                 </div>
+
+                {/* Fare Breakdown */}
+                {fareBreakdown && (
+                  <div className="p-3 bg-gray-50 rounded-xl space-y-1.5">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Detalhes da tarifa</p>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Tarifa base</span>
+                      <span className="text-gray-900 font-medium">{fareBreakdown.currency} {fareBreakdown.baseFare.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Distância ({distance?.toFixed(1)} km)</span>
+                      <span className="text-gray-900 font-medium">{fareBreakdown.currency} {fareBreakdown.distanceFare.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Tempo ({duration} min)</span>
+                      <span className="text-gray-900 font-medium">{fareBreakdown.currency} {fareBreakdown.timeFare.toFixed(2)}</span>
+                    </div>
+                    {fareBreakdown.multiplier > 1 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-orange-600 font-medium">Tarifa dinâmica ({fareBreakdown.multiplier}x)</span>
+                        <span className="text-orange-600 font-medium">+{((fareBreakdown.total - fareBreakdown.subtotal)).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-gray-200 pt-1.5 mt-1.5 flex justify-between text-sm">
+                      <span className="text-gray-900 font-semibold">Total</span>
+                      <span className="text-[#E63946] font-bold">{fareBreakdown.currency} {fareBreakdown.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Payment */}
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">

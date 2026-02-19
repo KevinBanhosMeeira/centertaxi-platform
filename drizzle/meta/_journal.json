@@ -43,6 +43,13 @@
       "when": 1771527510420,
       "tag": "0005_quiet_talos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1771532181153,
+      "tag": "0006_yummy_shotgun",
+      "breakpoints": true
     }
   ]
 }
