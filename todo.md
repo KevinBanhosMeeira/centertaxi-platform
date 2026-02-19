@@ -319,3 +319,16 @@ Ver detalhes completos em `ROADMAP.md`
 - [x] Adicionar campo distanceToPickup no WSRideOfferedPayload
 - [ ] Adicionar configuração de raio de busca em tenantSettings
 - [ ] Criar testes para matching service
+
+
+## FASE 7: Tracking de Localização em Tempo Real (CONCLUÍDA)
+- [x] Criar endpoint tRPC location.update para motorista enviar localização
+- [x] Broadcast driver_location_update via WebSocket para passageiro da corrida
+- [x] Integrar useWebSocket no frontend do passageiro (Passenger.tsx)
+- [x] Receber mensagens driver_location_update e atualizar estado
+- [x] Atualizar marcador do motorista no mapa com nova posição
+- [x] Atualizar rota do motorista até o passageiro em tempo real
+- [x] Receber mensagens ride_status_changed e refetch active ride
+- [x] Adicionar método notifyDriverLocationUpdate ao realtimeManager
+- [ ] Implementar atualização automática a cada 3-5 segundos no app do motorista
+- [ ] Testar fluxo completo: motorista move → passageiro vê em tempo real

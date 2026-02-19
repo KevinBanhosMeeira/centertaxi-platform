@@ -141,6 +141,17 @@ class RealtimeManager {
   }
 
   /**
+   * Notify about driver location update
+   */
+  notifyDriverLocationUpdate(rideId: number, payload: WSDriverLocationPayload) {
+    this.broadcastToRide(rideId, {
+      type: "driver_location_update",
+      payload,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
    * Join a ride room
    */
   joinRideRoom(rideId: number, userId: number, role: "passenger" | "driver") {

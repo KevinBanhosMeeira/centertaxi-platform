@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { MapView } from "@/components/Map";
 import { RatingModal } from "@/components/RatingModal";
+import { useWebSocket } from "@/shared/hooks/useWebSocket";
 
 const PRICE_PER_KM = 3.5;
 
@@ -17,6 +18,13 @@ type TabType = "home" | "activity" | "account";
 export default function Passenger() {
   const { user, loading, logout } = useAuth();
   const [, setLocation] = useLocation();
+  
+  // WebSocket for realtime updates
+  const { isConnected, lastMessage, connect, disconnect, sendTyped } = useWebSocket({
+    userId: user?.id || 0,
+    role: "passenger",
+    autoConnect: !!user,
+  });
   const [destination, setDestination] = useState("");
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -490,6 +498,43 @@ export default function Passenger() {
     { rideId: activeRide?.id || 0 },
     { enabled: !!activeRide && activeRide.status === "completed" }
   );
+
+  // Listen to WebSocket messages for driver location updates
+  useEffect(() => {
+    if (!lastMessage) return;
+    
+    if (lastMessage.type === "driver_location_update") {
+      const payload = lastMessage.payload as { driverId: number; rideId: number; lat: string; lng: string };
+      
+      // Update driver marker position
+      if (driverMarkerRef.current && mapRef.current) {
+        const newPos = { lat: parseFloat(payload.lat), lng: parseFloat(payload.lng) };
+        driverMarkerRef.current.setPosition(newPos);
+        
+        // Update route if driver is en route to passenger
+        if (activeRide?.status === "accepted" && originCoords && directionsServiceRef.current && driverDirectionsRendererRef.current) {
+          directionsServiceRef.current.route(
+            {
+              origin: newPos,
+              destination: originCoords,
+              travelMode: google.maps.TravelMode.DRIVING,
+            },
+            (result, status) => {
+              if (status === "OK" && result) {
+                driverDirectionsRendererRef.current?.setDirections(result);
+              }
+            }
+          );
+        }
+      }
+    }
+    
+    if (lastMessage.type === "ride_status_changed") {
+      // Refetch active ride when status changes
+      refetchActiveRide();
+      toast.info(`Status da corrida: ${lastMessage.payload.newStatus}`);
+    }
+  }, [lastMessage, activeRide, originCoords]);
 
   // Detect when ride is completed and show rating modal
   useEffect(() => {

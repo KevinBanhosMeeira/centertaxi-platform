@@ -330,29 +330,7 @@ export const appRouter = router({
       }),
   }),
 
-  location: router({
-    // Driver: update location
-    update: driverProcedure
-      .input(z.object({
-        lat: z.string(),
-        lng: z.string(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        await db.upsertDriverLocation({
-          driverId: ctx.user.id,
-          lat: input.lat,
-          lng: input.lng,
-        });
-        return { success: true };
-      }),
 
-    // Get driver location (for passengers tracking their ride)
-    getDriver: protectedProcedure
-      .input(z.object({ driverId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getDriverLocation(input.driverId);
-      }),
-  }),
 
   addressHistory: router({
     // Save address to history
@@ -432,6 +410,43 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const rating = await db.getRatingByRideId(input.rideId);
         return { rated: !!rating };
+      }),
+  }),
+
+  location: router({
+    // Driver: Update location
+    update: driverProcedure
+      .input(z.object({
+        lat: z.string(),
+        lng: z.string(),
+        rideId: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Update driver location in database
+        await db.upsertDriverLocation({
+          driverId: ctx.user.id,
+          lat: input.lat,
+          lng: input.lng,
+        });
+        
+        // If driver is in an active ride, broadcast location to passenger
+        if (input.rideId) {
+          realtimeManager.notifyDriverLocationUpdate(input.rideId, {
+            driverId: ctx.user.id,
+            rideId: input.rideId,
+            lat: input.lat,
+            lng: input.lng,
+          });
+        }
+        
+        return { success: true };
+      }),
+
+    // Get driver location (for passengers tracking their ride)
+    getDriver: protectedProcedure
+      .input(z.object({ driverId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getDriverLocation(input.driverId);
       }),
   }),
 
