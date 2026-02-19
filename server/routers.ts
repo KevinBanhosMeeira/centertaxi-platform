@@ -5,6 +5,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { TRPCError } from "@trpc/server";
+import { realtimeManager } from "./realtime/websocket";
 
 // Helper procedures
 const passengerProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -146,6 +147,21 @@ export const appRouter = router({
         }
 
         await db.updateRideStatus(input.rideId, "cancelled");
+        
+        // Notify driver if ride was accepted
+        if (ride.status === "accepted" && ride.driverId) {
+          realtimeManager.notifyRideStatusChanged(input.rideId, {
+            rideId: input.rideId,
+            oldStatus: ride.status,
+            newStatus: "cancelled",
+            passengerId: ctx.user.id,
+          });
+          
+          // Leave ride room
+          realtimeManager.leaveRideRoom(input.rideId, ctx.user.id, "passenger");
+          realtimeManager.leaveRideRoom(input.rideId, ride.driverId, "driver");
+        }
+        
         return { success: true };
       }),
 
@@ -186,6 +202,19 @@ export const appRouter = router({
         }
 
         await db.updateRideStatus(input.rideId, "accepted", ctx.user.id);
+        
+        // Notify passenger that driver accepted
+        realtimeManager.notifyRideStatusChanged(input.rideId, {
+          rideId: input.rideId,
+          oldStatus: "requested",
+          newStatus: "accepted",
+          driverId: ctx.user.id,
+        });
+        
+        // Join ride room for realtime updates
+        realtimeManager.joinRideRoom(input.rideId, ctx.user.id, "driver");
+        realtimeManager.joinRideRoom(input.rideId, ride.passengerId, "passenger");
+        
         return { success: true };
       }),
 
@@ -205,6 +234,15 @@ export const appRouter = router({
         }
 
         await db.updateRideStatus(input.rideId, "in_progress");
+        
+        // Notify passenger that ride started
+        realtimeManager.notifyRideStatusChanged(input.rideId, {
+          rideId: input.rideId,
+          oldStatus: "accepted",
+          newStatus: "in_progress",
+          driverId: ctx.user.id,
+        });
+        
         return { success: true };
       }),
 
@@ -224,6 +262,19 @@ export const appRouter = router({
         }
 
         await db.updateRideStatus(input.rideId, "completed");
+        
+        // Notify passenger that ride completed
+        realtimeManager.notifyRideStatusChanged(input.rideId, {
+          rideId: input.rideId,
+          oldStatus: "in_progress",
+          newStatus: "completed",
+          driverId: ctx.user.id,
+        });
+        
+        // Leave ride room
+        realtimeManager.leaveRideRoom(input.rideId, ctx.user.id, "driver");
+        realtimeManager.leaveRideRoom(input.rideId, ride.passengerId, "passenger");
+        
         return { success: true };
       }),
 

@@ -291,3 +291,16 @@ Ver detalhes completos em `ROADMAP.md`
 - [ ] Testes realtime (WebSocket)
 - [ ] Documentar arquitetura
 - [ ] Guia de desenvolvimento
+
+
+## FASE 5: Integração WebSocket ao Express (CONCLUÍDA)
+- [x] Inicializar WebSocket server no boot do Express (server/_core/index.ts)
+- [x] Passar instância do HTTP server para realtimeManager.initialize()
+- [x] Integrar realtimeManager.notifyRideStatusChanged() nos endpoints de rides
+- [x] Integrar realtimeManager.joinRideRoom() quando corrida for aceita
+- [x] Integrar realtimeManager.leaveRideRoom() quando corrida for finalizada/cancelada
+- [x] Notificações implementadas em: accept, start, complete, cancel
+- [x] Criar documento de teste manual (TEST_WEBSOCKET.md)
+- [ ] Integrar useWebSocket no frontend (Passenger e Driver)
+- [ ] Implementar realtimeManager.notifyRideOffered() quando corrida for oferecida (matching)
+- [ ] Implementar tracking de localização do motorista em tempo real
