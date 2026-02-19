@@ -209,3 +209,85 @@
 - [x] Destacar apenas a rota e os marcadores de origem/destino
 - [x] Desabilitar POIs clicáveis (clickableIcons: false)
 - [x] Aumentar zoom padrão para 17 para reduzir POIs visíveis
+
+
+---
+
+# 🚀 ROADMAP DE REESTRUTURAÇÃO - PLATAFORMA COMPLETA
+
+Ver detalhes completos em `ROADMAP.md`
+
+## Fase 1: Estrutura de Domains (Backend)
+- [ ] Criar server/domains/ com subpastas (auth, users, drivers, rides, payments, notifications, ai, admin, tenant)
+- [ ] Cada domain com router.ts, service.ts, repository.ts, types.ts
+- [ ] Integrar todos os domains no routers.ts principal
+
+## Fase 2: Banco Multi-Tenant
+- [ ] Criar tabela tenants (nome, logo, cores, cidade)
+- [ ] Criar tabela tenant_settings
+- [ ] Criar tabela vehicles (motoristas)
+- [ ] Criar tabela ride_events (log de eventos)
+- [ ] Adicionar tenant_id em users, drivers, rides
+
+## Fase 3: Ride State Machine
+- [ ] Implementar estados: REQUESTED → MATCHING → OFFERED → ACCEPTED → DRIVER_EN_ROUTE → DRIVER_ARRIVED → IN_PROGRESS → COMPLETED / CANCELED
+- [ ] Validar transições entre estados
+- [ ] Registrar eventos em ride_events
+- [ ] Notificar passageiro e motorista em cada transição
+
+## Fase 4: Sistema Realtime (WebSocket)
+- [ ] Criar server/realtime/ com websocket.ts, events.ts, handlers.ts
+- [ ] Implementar eventos: ride:offered, ride:accepted, ride:status_changed, driver:location_update, notification:new
+- [ ] Implementar rooms por ride, driver, passenger
+
+## Fase 5: Aplicativo do Motorista
+- [ ] Reestruturar frontend: client/src/driver/
+- [ ] Login / Cadastro motorista
+- [ ] Toggle Online/Offline
+- [ ] Receber ofertas de corrida (realtime)
+- [ ] Aceitar / Recusar corrida
+- [ ] Navegar até passageiro (mapa com rota)
+- [ ] Botões: Cheguei, Iniciar Corrida, Finalizar Corrida
+- [ ] Ver ganhos (dia/semana/mês)
+- [ ] Histórico de corridas
+
+## Fase 6: Painel Administrativo
+- [ ] Reestruturar frontend: client/src/admin/
+- [ ] Dashboard com métricas
+- [ ] Gerenciar Passageiros
+- [ ] Gerenciar Motoristas (aprovar, bloquear)
+- [ ] Gerenciar Corridas
+- [ ] Gerenciar Cidades
+- [ ] Gerenciar Tenants (white-label)
+- [ ] Relatórios
+
+## Fase 7: Sistema Multi-Tenant White-Label
+- [ ] Middleware para detectar tenant (domínio/subdomain)
+- [ ] Filtrar todas as queries por tenant_id
+- [ ] Configuração de branding por tenant
+- [ ] Isolamento completo de dados entre tenants
+
+## Fase 8: Assistente de IA
+- [ ] Criar server/domains/ai/
+- [ ] Chat com passageiro
+- [ ] Criar corrida via chat
+- [ ] Agendar corrida via chat
+- [ ] Recomendar destinos
+- [ ] Estimar preço via chat
+- [ ] Componente de chat no app passageiro
+
+## Fase 9: Melhorias App Passageiro
+- [ ] Chat em tempo real com motorista
+- [ ] Chat com IA
+- [ ] Compartilhar corrida (link tracking)
+- [ ] Sistema de cupons
+- [ ] Pagamento Stripe
+- [ ] Notificações push
+
+## Fase 10: Testes e Documentação
+- [ ] Testes unitários para domains
+- [ ] Testes de integração state machine
+- [ ] Testes E2E fluxo completo
+- [ ] Testes realtime (WebSocket)
+- [ ] Documentar arquitetura
+- [ ] Guia de desenvolvimento
