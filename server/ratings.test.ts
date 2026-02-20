@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+import { __resetForTests } from "./db";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
@@ -33,8 +34,33 @@ describe("Ratings System", () => {
   let caller: ReturnType<typeof appRouter.createCaller>;
 
   beforeAll(async () => {
+    __resetForTests();
     const ctx = createPassengerContext();
     caller = appRouter.createCaller(ctx);
+
+    const driverCaller = appRouter.createCaller({
+      ...ctx,
+      user: {
+        ...ctx.user!,
+        id: 2,
+        role: "driver",
+        openId: "driver-test",
+      },
+    });
+
+    const ride = await caller.rides.request({
+      originAddress: "Rua A, 123",
+      originLat: "-23.5505",
+      originLng: "-46.6333",
+      destinationAddress: "Rua B, 456",
+      destinationLat: "-23.5600",
+      destinationLng: "-46.6400",
+      distanceKm: "5.2",
+      priceEstimate: "18.20",
+    });
+    await driverCaller.rides.accept({ rideId: ride.id });
+    await driverCaller.rides.start({ rideId: ride.id });
+    await driverCaller.rides.complete({ rideId: ride.id });
   });
 
   it("should create a rating for a completed ride", async () => {

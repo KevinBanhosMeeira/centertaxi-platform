@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+import { __resetForTests } from "./db";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
@@ -34,6 +35,7 @@ describe("Address History", () => {
   let userId: number;
 
   beforeAll(async () => {
+    __resetForTests();
     const ctx = createTestContext();
     caller = appRouter.createCaller(ctx);
     userId = 1;
