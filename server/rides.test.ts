@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+import { __resetForTests } from "./db";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
@@ -55,6 +56,10 @@ function createDriverContext(): TrpcContext {
 }
 
 describe("rides router", () => {
+  beforeEach(() => {
+    __resetForTests();
+  });
+
   it("passenger can request a ride", async () => {
     const ctx = createPassengerContext();
     const caller = appRouter.createCaller(ctx);

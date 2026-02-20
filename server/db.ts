@@ -5,6 +5,72 @@ import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
+type InMemoryStore = {
+  users: Array<any>;
+  rides: Array<Ride>;
+  driverLocations: Array<any>;
+  addressHistory: Array<any>;
+  ratings: Array<any>;
+  tenantSettings: Array<TenantSettings>;
+  nextIds: {
+    user: number;
+    ride: number;
+    driverLocation: number;
+    addressHistory: number;
+    rating: number;
+    tenantSettings: number;
+  };
+};
+
+const DEFAULT_TENANT_SETTINGS: TenantSettings = {
+  id: 1,
+  tenantId: 1,
+  baseFare: "5.00",
+  pricePerKm: "2.50",
+  pricePerMinute: "0.50",
+  minimumFare: "10.00",
+  commissionPercent: 20,
+  currency: "BRL",
+  maxSearchRadiusKm: 10,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const inMemory: InMemoryStore = {
+  users: [],
+  rides: [],
+  driverLocations: [],
+  addressHistory: [],
+  ratings: [],
+  tenantSettings: [DEFAULT_TENANT_SETTINGS],
+  nextIds: {
+    user: 1,
+    ride: 1,
+    driverLocation: 1,
+    addressHistory: 1,
+    rating: 1,
+    tenantSettings: 2,
+  },
+};
+
+
+export function __resetForTests() {
+  inMemory.users = [];
+  inMemory.rides = [];
+  inMemory.driverLocations = [];
+  inMemory.addressHistory = [];
+  inMemory.ratings = [];
+  inMemory.tenantSettings = [{ ...DEFAULT_TENANT_SETTINGS }];
+  inMemory.nextIds = {
+    user: 1,
+    ride: 1,
+    driverLocation: 1,
+    addressHistory: 1,
+    rating: 1,
+    tenantSettings: 2,
+  };
+}
+
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
@@ -103,7 +169,27 @@ export async function getUserById(id: number) {
 
 export async function updateUserProfile(userId: number, data: { name?: string; phone?: string; role?: "passenger" | "driver" | "admin"; profileCompleted?: number }) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    const existing = inMemory.users.find((u) => u.id === userId);
+    if (existing) {
+      Object.assign(existing, data, { updatedAt: new Date() });
+    } else {
+      inMemory.users.push({
+        id: userId,
+        openId: `in-memory-${userId}`,
+        name: data.name ?? null,
+        email: null,
+        loginMethod: "manus",
+        role: data.role ?? "passenger",
+        phone: data.phone ?? null,
+        profileCompleted: data.profileCompleted ?? 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastSignedIn: new Date(),
+      });
+    }
+    return;
+  }
 
   await db.update(users).set(data).where(eq(users.id, userId));
 }
@@ -111,7 +197,35 @@ export async function updateUserProfile(userId: number, data: { name?: string; p
 // Ride helpers
 export async function createRide(data: InsertRide): Promise<Ride> {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    const ride: Ride = {
+      id: inMemory.nextIds.ride++,
+      tenantId: data.tenantId ?? null,
+      passengerId: data.passengerId,
+      driverId: data.driverId ?? null,
+      status: data.status ?? "requested",
+      originAddress: data.originAddress,
+      originLat: data.originLat,
+      originLng: data.originLng,
+      destinationAddress: data.destinationAddress,
+      destinationLat: data.destinationLat,
+      destinationLng: data.destinationLng,
+      distanceKm: data.distanceKm ?? null,
+      durationMinutes: data.durationMinutes ?? null,
+      priceEstimate: data.priceEstimate ?? null,
+      finalPrice: data.finalPrice ?? null,
+      fareBreakdown: data.fareBreakdown ?? null,
+      createdAt: new Date(),
+      acceptedAt: null,
+      startedAt: null,
+      completedAt: null,
+      cancelledAt: null,
+      scheduledAt: data.scheduledAt ?? null,
+      isScheduled: data.isScheduled ?? 0,
+    };
+    inMemory.rides.push(ride);
+    return ride;
+  }
 
   const result = await db.insert(rides).values(data);
   const rideId = Number(result[0].insertId);
@@ -122,7 +236,7 @@ export async function createRide(data: InsertRide): Promise<Ride> {
 
 export async function getRideById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return inMemory.rides.find((ride) => ride.id === id);
 
   const result = await db.select().from(rides).where(eq(rides.id, id)).limit(1);
   return result.length > 0 ? result[0] : undefined;
@@ -130,28 +244,32 @@ export async function getRideById(id: number) {
 
 export async function getAvailableRides() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return inMemory.rides.filter((ride) => ride.status === "requested").sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return await db.select().from(rides).where(eq(rides.status, "requested")).orderBy(desc(rides.createdAt));
 }
 
 export async function getRidesByPassenger(passengerId: number) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return inMemory.rides.filter((ride) => ride.passengerId === passengerId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return await db.select().from(rides).where(eq(rides.passengerId, passengerId)).orderBy(desc(rides.createdAt));
 }
 
 export async function getRidesByDriver(driverId: number) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return inMemory.rides.filter((ride) => ride.driverId === driverId).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return await db.select().from(rides).where(eq(rides.driverId, driverId)).orderBy(desc(rides.createdAt));
 }
 
 export async function getActiveRideForPassenger(passengerId: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) {
+    return inMemory.rides.find((ride) =>
+      ride.passengerId === passengerId && ["requested", "accepted", "in_progress"].includes(ride.status),
+    ) ?? null;
+  }
 
   const result = await db.select().from(rides).where(
     and(
@@ -169,7 +287,11 @@ export async function getActiveRideForPassenger(passengerId: number) {
 
 export async function getActiveRideForDriver(driverId: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) {
+    return inMemory.rides.find((ride) =>
+      ride.driverId === driverId && ["accepted", "in_progress"].includes(ride.status),
+    ) ?? null;
+  }
 
   const result = await db.select().from(rides).where(
     and(
@@ -186,7 +308,22 @@ export async function getActiveRideForDriver(driverId: number) {
 
 export async function updateRideStatus(rideId: number, status: Ride["status"], driverId?: number) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    const ride = inMemory.rides.find((r) => r.id === rideId);
+    if (!ride) return;
+    ride.status = status;
+    if (status === "accepted" && driverId) {
+      ride.driverId = driverId;
+      ride.acceptedAt = new Date();
+    } else if (status === "in_progress") {
+      ride.startedAt = new Date();
+    } else if (status === "completed") {
+      ride.completedAt = new Date();
+    } else if (status === "cancelled") {
+      ride.cancelledAt = new Date();
+    }
+    return;
+  }
 
   const updateData: Partial<Ride> = { status };
   
@@ -206,14 +343,14 @@ export async function updateRideStatus(rideId: number, status: Ride["status"], d
 
 export async function getAllRides() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return [...inMemory.rides].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return await db.select().from(rides).orderBy(desc(rides.createdAt));
 }
 
 export async function getAllUsers() {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return [...inMemory.users].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return await db.select().from(users).orderBy(desc(users.createdAt));
 }
@@ -221,7 +358,23 @@ export async function getAllUsers() {
 // Driver location helpers
 export async function upsertDriverLocation(data: InsertDriverLocation) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    const existing = inMemory.driverLocations.find((loc) => loc.driverId === data.driverId);
+    if (existing) {
+      existing.lat = data.lat;
+      existing.lng = data.lng;
+      existing.updatedAt = new Date();
+    } else {
+      inMemory.driverLocations.push({
+        id: inMemory.nextIds.driverLocation++,
+        driverId: data.driverId,
+        lat: data.lat,
+        lng: data.lng,
+        updatedAt: new Date(),
+      });
+    }
+    return;
+  }
 
   const existing = await db.select().from(driverLocations).where(eq(driverLocations.driverId, data.driverId)).limit(1);
 
@@ -234,7 +387,7 @@ export async function upsertDriverLocation(data: InsertDriverLocation) {
 
 export async function getDriverLocation(driverId: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return inMemory.driverLocations.find((loc) => loc.driverId === driverId);
 
   const result = await db.select().from(driverLocations).where(eq(driverLocations.driverId, driverId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
@@ -243,7 +396,26 @@ export async function getDriverLocation(driverId: number) {
 // Address history helpers
 export async function saveAddressToHistory(data: InsertAddressHistory) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    if (data.placeId) {
+      const existing = inMemory.addressHistory.find((item) => item.userId === data.userId && item.placeId === data.placeId);
+      if (existing) {
+        existing.createdAt = new Date();
+        return;
+      }
+    }
+
+    inMemory.addressHistory.push({
+      id: inMemory.nextIds.addressHistory++,
+      userId: data.userId,
+      address: data.address,
+      lat: data.lat,
+      lng: data.lng,
+      placeId: data.placeId ?? null,
+      createdAt: new Date(),
+    });
+    return;
+  }
 
   // Check if address already exists for this user (by placeId if available)
   if (data.placeId) {
@@ -269,7 +441,12 @@ export async function saveAddressToHistory(data: InsertAddressHistory) {
 
 export async function getRecentAddresses(userId: number) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) {
+    return inMemory.addressHistory
+      .filter((item) => item.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 5);
+  }
 
   return await db.select()
     .from(addressHistory)
@@ -284,14 +461,25 @@ export async function getRecentAddresses(userId: number) {
 
 export async function createRating(data: InsertRating) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    inMemory.ratings.push({
+      id: inMemory.nextIds.rating++,
+      rideId: data.rideId,
+      passengerId: data.passengerId,
+      driverId: data.driverId,
+      rating: data.rating,
+      comment: data.comment ?? null,
+      createdAt: new Date(),
+    });
+    return;
+  }
 
   await db.insert(ratings).values(data);
 }
 
 export async function getRatingByRideId(rideId: number) {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) return inMemory.ratings.find((rating) => rating.rideId === rideId) || null;
 
   const result = await db.select()
     .from(ratings)
@@ -303,7 +491,24 @@ export async function getRatingByRideId(rideId: number) {
 
 export async function getDriverRatings(driverId: number) {
   const db = await getDb();
-  if (!db) return { average: 0, count: 0, ratings: [] };
+  if (!db) {
+    const driverRatings = inMemory.ratings
+      .filter((rating) => rating.driverId === driverId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    if (driverRatings.length === 0) {
+      return { average: 0, count: 0, ratings: [] };
+    }
+
+    const sum = driverRatings.reduce((acc, r) => acc + r.rating, 0);
+    const average = sum / driverRatings.length;
+
+    return {
+      average: Math.round(average * 10) / 10,
+      count: driverRatings.length,
+      ratings: driverRatings,
+    };
+  }
 
   const driverRatings = await db.select()
     .from(ratings)
@@ -330,7 +535,9 @@ export async function getDriverRatings(driverId: number) {
 
 export async function getTenantSettings(tenantId: number): Promise<TenantSettings | null> {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) {
+    return inMemory.tenantSettings.find((settings) => settings.tenantId === tenantId) ?? null;
+  }
 
   const result = await db.select()
     .from(tenantSettings)
